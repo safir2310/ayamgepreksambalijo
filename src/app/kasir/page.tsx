@@ -27,7 +27,8 @@ import {
   Calendar,
   MapPin,
   Phone,
-  ShoppingBag
+  ShoppingBag,
+  Star
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -457,13 +458,36 @@ export default function KasirPage() {
         const data = await res.json()
         console.log('[Cashier] Order created successfully:', data.order.id)
 
+        // Create success message with points info
+        let successMessage = `Kembalian: Rp ${(payment - total).toLocaleString('id-ID')}`
+        if (data.pointsEarned > 0) {
+          successMessage += ` | +${data.pointsEarned} Poin (Total: ${data.userPoints})`
+        }
+
         toast.success('Pesanan Berhasil!', {
-          description: `Kembalian: Rp ${(payment - total).toLocaleString('id-ID')}`,
-          position: 'top-center'
+          description: successMessage,
+          position: 'top-center',
+          duration: 5000
         })
 
+        // Show separate toast for points if earned
+        if (data.pointsEarned > 0) {
+          setTimeout(() => {
+            toast.success('Poin Ditambahkan!', {
+              description: (
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span>Anda mendapatkan <strong>{data.pointsEarned} poin</strong> dari pesanan ini</span>
+                </div>
+              ),
+              position: 'top-right',
+              duration: 4000
+            })
+          }, 500)
+        }
+
         // Print receipt
-        printReceipt(data.order, payment, payment - total)
+        printReceipt(data.order, payment, payment - total, data.pointsEarned)
 
         // Reset cart and payment
         setCart([])
@@ -491,7 +515,7 @@ export default function KasirPage() {
     }
   }
 
-  const printReceipt = (order: any, payment: number, change: number) => {
+  const printReceipt = (order: any, payment: number, change: number, pointsEarned: number = 0) => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
 
@@ -564,6 +588,15 @@ export default function KasirPage() {
               padding: 10px;
               border-radius: 5px;
             }
+            .points {
+              font-size: 12px;
+              text-align: center;
+              margin: 10px 0;
+              background: #fefce8;
+              padding: 8px;
+              border-radius: 5px;
+              color: #854d0e;
+            }
           </style>
         </head>
         <body>
@@ -608,6 +641,12 @@ export default function KasirPage() {
           <div class="change">
             KEMBALIAN: Rp ${change.toLocaleString('id-ID')}
           </div>
+
+          ${pointsEarned > 0 ? `
+          <div class="points">
+            ⭐ Poin Ditambahkan: +${pointsEarned} Poin
+          </div>
+          ` : ''}
 
           <div class="footer">
             <p>Terima kasih telah berbelanja</p>

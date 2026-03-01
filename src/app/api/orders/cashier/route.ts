@@ -144,8 +144,8 @@ export async function POST(request: NextRequest) {
         console.log('[Cashier Order] Stock updated:', item.productId, 'new stock:', updated.stock)
       }
 
-      // Calculate points (1 point per 10,000 Rupiah spent)
-      pointsEarned = Math.floor(total / 10000)
+      // Calculate points (1 point per 1,000 Rupiah spent)
+      pointsEarned = Math.floor(total / 1000)
       console.log('[Cashier Order] Points earned:', pointsEarned)
 
       // Update user points
@@ -182,7 +182,13 @@ export async function POST(request: NextRequest) {
         console.log('[Cashier Order] Points history created')
       }
 
-      return newOrder
+      // Fetch updated user to get current points
+      const updatedUser = await tx.user.findUnique({
+        where: { id: userId },
+        select: { points: true }
+      })
+
+      return { ...newOrder, userPoints: updatedUser?.points || 0 }
     })
 
     console.log('[Cashier Order] Transaction completed successfully')
@@ -194,6 +200,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       order: createdOrder,
+      pointsEarned,
+      userPoints: createdOrder.userPoints,
       message: 'Pesanan berhasil dibuat'
     })
   } catch (error) {
