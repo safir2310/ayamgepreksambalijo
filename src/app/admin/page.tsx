@@ -919,6 +919,10 @@ export default function AdminPage() {
               <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">User</span>
             </TabsTrigger>
+            <TabsTrigger value="cashiers" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white flex-shrink-0 min-w-max px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm">
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Kasir</span>
+            </TabsTrigger>
             <TabsTrigger value="shop-profile" className="data-[state=active]:bg-green-500 data-[state=active]:text-white flex-shrink-0 min-w-max px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm">
               <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
               <span className="hidden sm:inline">Profil Toko</span>
@@ -1710,93 +1714,223 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          {/* Shop Profile Tab */}
-          <TabsContent value="shop-profile">
-            <Card className="border-2 border-green-100">
+          {/* Cashiers Tab */}
+          <TabsContent value="cashiers">
+            <Card className="border-2 border-purple-100">
               <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
-                <CardTitle className="flex items-center gap-2 text-green-600">
-                  <Store className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Kelola Profil Toko
+                <CardTitle className="flex items-center gap-2 text-purple-600 text-base sm:text-lg">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Kelola Kasir
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 sm:px-6">
-                <div className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">Nama Toko</label>
-                      <Input
-                        value={shopProfileForm.storeName}
-                        onChange={(e) => setShopProfileForm({ ...shopProfileForm, storeName: e.target.value })}
-                        className="border-green-200 focus-visible:ring-green-500"
-                        placeholder="Masukkan nama toko"
-                      />
+                <div className="space-y-4">
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+                    <div className="bg-gradient-to-br from-purple-50 to-white border-2 border-purple-200 rounded-lg p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs text-gray-600">Total Kasir</p>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-600">
+                        {users.filter(u => u.role !== 'admin').length}
+                      </p>
                     </div>
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">Slogan</label>
-                      <Input
-                        value={shopProfileForm.slogan}
-                        onChange={(e) => setShopProfileForm({ ...shopProfileForm, slogan: e.target.value })}
-                        className="border-green-200 focus-visible:ring-green-500"
-                        placeholder="Masukkan slogan toko"
-                      />
+                    <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200 rounded-lg p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs text-gray-600">Total Pesanan</p>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-600">{orders.length}</p>
                     </div>
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">Nomor WhatsApp</label>
-                      <Input
-                        value={shopProfileForm.whatsapp}
-                        onChange={(e) => setShopProfileForm({ ...shopProfileForm, whatsapp: e.target.value })}
-                        className="border-green-200 focus-visible:ring-green-500"
-                        placeholder="Contoh: 6285260812758"
-                      />
+                    <div className="bg-gradient-to-br from-green-50 to-white border-2 border-green-200 rounded-lg p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs text-gray-600">Total Penjualan</p>
+                      <p className="text-lg sm:text-xl font-bold text-green-600">
+                        Rp {(orders.reduce((sum, o) => sum + o.total, 0) / 1000).toFixed(0)}K
+                      </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <label className="text-sm font-medium text-gray-700">Instagram</label>
-                        <Input
-                          value={shopProfileForm.instagram}
-                          onChange={(e) => setShopProfileForm({ ...shopProfileForm, instagram: e.target.value })}
-                          className="border-green-200 focus-visible:ring-green-500"
-                          placeholder="@username"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <label className="text-sm font-medium text-gray-700">Facebook</label>
-                        <Input
-                          value={shopProfileForm.facebook}
-                          onChange={(e) => setShopProfileForm({ ...shopProfileForm, facebook: e.target.value })}
-                          className="border-green-200 focus-visible:ring-green-500"
-                          placeholder="URL Facebook"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">Alamat</label>
-                      <Textarea
-                        value={shopProfileForm.address}
-                        onChange={(e) => setShopProfileForm({ ...shopProfileForm, address: e.target.value })}
-                        className="border-green-200 focus-visible:ring-green-500 min-h-[100px]"
-                        placeholder="Masukkan alamat lengkap toko"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">Jam Operasional</label>
-                      <Textarea
-                        value={shopProfileForm.operatingHours}
-                        onChange={(e) => setShopProfileForm({ ...shopProfileForm, operatingHours: e.target.value })}
-                        className="border-green-200 focus-visible:ring-green-500 min-h-[80px]"
-                        placeholder="Contoh: Senin - Minggu&#10;10:00 - 22:00 WIB"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">URL Logo</label>
-                      <Input
-                        value={shopProfileForm.logo}
-                        onChange={(e) => setShopProfileForm({ ...shopProfileForm, logo: e.target.value })}
-                        className="border-green-200 focus-visible:ring-green-500"
-                        placeholder="URL gambar logo"
-                      />
+                    <div className="bg-gradient-to-br from-orange-50 to-white border-2 border-orange-200 rounded-lg p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs text-gray-600">Pesanan Selesai</p>
+                      <p className="text-xl sm:text-2xl font-bold text-orange-600">
+                        {orders.filter(o => o.status === 'completed').length}
+                      </p>
                     </div>
                   </div>
+
+                  {/* Cashiers List */}
+                  <ScrollArea className="h-[400px] sm:h-[500px]">
+                    <div className="space-y-4">
+                      {users.filter(u => u.role !== 'admin').length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">
+                          <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                          <p>Belum ada kasir</p>
+                        </div>
+                      ) : (
+                        users.filter(u => u.role !== 'admin').map((cashier) => {
+                          const cashierOrders = orders.filter(o => o.userId === cashier.id)
+                          const totalSales = cashierOrders.reduce((sum, o) => sum + o.total, 0)
+                          const completedOrders = cashierOrders.filter(o => o.status === 'completed').length
+                          const pendingOrders = cashierOrders.filter(o => o.status === 'pending').length
+
+                          return (
+                            <motion.div
+                              key={cashier.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="border border-purple-100 rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow bg-gradient-to-br from-purple-50/50 to-white"
+                            >
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-2.5 sm:p-3 rounded-full">
+                                    <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-800 text-base sm:text-lg">{cashier.username}</h4>
+                                    <p className="text-xs sm:text-sm text-gray-500">{cashier.email}</p>
+                                    <p className="text-xs sm:text-sm text-gray-500">{cashier.phone}</p>
+                                  </div>
+                                </div>
+                                <Badge className="bg-purple-500 text-xs sm:text-sm">
+                                  {cashier.points} Poin
+                                </Badge>
+                              </div>
+
+                              {/* Performance Stats */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+                                <div className="bg-white rounded-lg p-2 sm:p-3 border border-purple-100">
+                                  <p className="text-[10px] sm:text-xs text-gray-500">Pesanan</p>
+                                          <p className="text-lg sm:text-xl font-bold text-purple-600">{cashierOrders.length}</p>
+                                        </div>
+                                        <div className="bg-white rounded-lg p-2 sm:p-3 border border-blue-100">
+                                          <p className="text-[10px] sm:text-xs text-gray-500">Penjualan</p>
+                                          <p className="text-base sm:text-lg font-bold text-blue-600">
+                                            Rp {(totalSales / 1000).toFixed(0)}K
+                                          </p>
+                                        </div>
+                                        <div className="bg-white rounded-lg p-2 sm:p-3 border border-green-100">
+                                          <p className="text-[10px] sm:text-xs text-gray-500">Selesai</p>
+                                          <p className="text-lg sm:text-xl font-bold text-green-600">{completedOrders}</p>
+                                        </div>
+                                        <div className="bg-white rounded-lg p-2 sm:p-3 border border-orange-100">
+                                          <p className="text-[10px] sm:text-xs text-gray-500">Pending</p>
+                                          <p className="text-lg sm:text-xl font-bold text-orange-600">{pendingOrders}</p>
+                                        </div>
+                                      </div>
+
+                                      {/* Recent Orders */}
+                                      {cashierOrders.length > 0 && (
+                                        <div className="border-t border-purple-200 pt-4">
+                                          <p className="text-sm font-semibold text-gray-700 mb-2">Pesanan Terakhir:</p>
+                                          <div className="space-y-2">
+                                            {cashierOrders.slice(0, 3).map((order) => (
+                                              <div key={order.id} className="flex items-center justify-between text-xs sm:text-sm bg-white rounded-lg p-2 sm:p-3 border border-purple-100">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="font-medium">#{order.id.slice(-6).toUpperCase()}</span>
+                                                  <span className="text-gray-500">
+                                                    {new Date(order.createdAt).toLocaleDateString('id-ID')}
+                                                  </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                  <span className="font-semibold">Rp {order.total.toLocaleString('id-ID')}</span>
+                                                  {getStatusBadge(order.status)}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </motion.div>
+                                  )
+                                })
+                              )}
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Shop Profile Tab */}
+                  <TabsContent value="shop-profile">
+                    <Card className="border-2 border-green-100">
+                      <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+                        <CardTitle className="flex items-center gap-2 text-green-600">
+                          <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                          Kelola Profil Toko
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-3 sm:px-6">
+                        <div className="space-y-6">
+                          <div className="grid gap-4">
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-gray-700">Nama Toko</label>
+                              <Input
+                                value={shopProfileForm.storeName}
+                                onChange={(e) => setShopProfileForm({ ...shopProfileForm, storeName: e.target.value })}
+                                className="border-green-200 focus-visible:ring-green-500"
+                                placeholder="Masukkan nama toko"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-gray-700">Slogan</label>
+                              <Input
+                                value={shopProfileForm.slogan}
+                                onChange={(e) => setShopProfileForm({ ...shopProfileForm, slogan: e.target.value })}
+                                className="border-green-200 focus-visible:ring-green-500"
+                                placeholder="Masukkan slogan toko"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-gray-700">Nomor WhatsApp</label>
+                              <Input
+                                value={shopProfileForm.whatsapp}
+                                onChange={(e) => setShopProfileForm({ ...shopProfileForm, whatsapp: e.target.value })}
+                                className="border-green-200 focus-visible:ring-green-500"
+                                placeholder="Contoh: 6285260812758"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="grid gap-2">
+                                <label className="text-sm font-medium text-gray-700">Instagram</label>
+                                <Input
+                                  value={shopProfileForm.instagram}
+                                  onChange={(e) => setShopProfileForm({ ...shopProfileForm, instagram: e.target.value })}
+                                  className="border-green-200 focus-visible:ring-green-500"
+                                  placeholder="@username"
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <label className="text-sm font-medium text-gray-700">Facebook</label>
+                                <Input
+                                  value={shopProfileForm.facebook}
+                                  onChange={(e) => setShopProfileForm({ ...shopProfileForm, facebook: e.target.value })}
+                                  className="border-green-200 focus-visible:ring-green-500"
+                                  placeholder="URL Facebook"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-gray-700">Alamat</label>
+                              <Textarea
+                                value={shopProfileForm.address}
+                                onChange={(e) => setShopProfileForm({ ...shopProfileForm, address: e.target.value })}
+                                className="border-green-200 focus-visible:ring-green-500 min-h-[100px]"
+                                placeholder="Masukkan alamat lengkap toko"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-gray-700">Jam Operasional</label>
+                              <Textarea
+                                value={shopProfileForm.operatingHours}
+                                onChange={(e) => setShopProfileForm({ ...shopProfileForm, operatingHours: e.target.value })}
+                                className="border-green-200 focus-visible:ring-green-500 min-h-[80px]"
+                                placeholder="Contoh: Senin - Minggu&#10;10:00 - 22:00 WIB"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-gray-700">URL Logo</label>
+                              <Input
+                                value={shopProfileForm.logo}
+                                onChange={(e) => setShopProfileForm({ ...shopProfileForm, logo: e.target.value })}
+                                className="border-green-200 focus-visible:ring-green-500"
+                                placeholder="URL gambar logo"
+                              />
+                            </div>
+                          </div>
 
                   {/* Preview */}
                   <div className="border-2 border-green-100 rounded-xl p-6 bg-gradient-to-b from-green-50 to-white">
