@@ -25,6 +25,7 @@ import {
   ChefHat,
   Package,
   Users,
+  User,
   ShoppingCart,
   LogOut,
   Plus,
@@ -41,7 +42,6 @@ import {
   Phone as PhoneIcon,
   Instagram as InstagramIcon,
   Facebook as FacebookIcon,
-  Clock as ClockIcon,
   Download
 } from 'lucide-react'
 import { useWebSocket } from '@/hooks/useWebSocket'
