@@ -177,6 +177,17 @@ export default function AdminPage() {
   // Export dialog
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
+  // User form
+  const [userForm, setUserForm] = useState({
+    username: '',
+    password: '',
+    email: '',
+    phone: '',
+    address: '',
+    role: 'cashier' as 'user' | 'cashier' | 'admin'
+  })
+  const [userDialogOpen, setUserDialogOpen] = useState(false)
+
   // WebSocket connection for admins
   useWebSocket(null, 'admin', {
     onNewOrder: (data) => {
@@ -715,6 +726,45 @@ export default function AdminPage() {
       })
     } finally {
       setSavingShopProfile(false)
+    }
+  }
+
+  const handleSaveUser = async () => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userForm)
+      })
+
+      if (res.ok) {
+        setUserDialogOpen(false)
+        setUserForm({
+          username: '',
+          password: '',
+          email: '',
+          phone: '',
+          address: '',
+          role: 'cashier'
+        })
+        fetchData()
+
+        toast.success('User Berhasil Ditambahkan!', {
+          description: `${userForm.role === 'cashier' ? 'Kasir' : 'User'} baru berhasil ditambahkan`,
+          position: 'top-center'
+        })
+      } else {
+        const data = await res.json()
+        toast.error('Gagal Menambahkan User', {
+          description: data.error || 'Gagal menambahkan user',
+          position: 'top-center'
+        })
+      }
+    } catch (error) {
+      toast.error('Terjadi Kesalahan', {
+        description: 'Silakan coba lagi nanti',
+        position: 'top-center'
+      })
     }
   }
 
@@ -1659,11 +1709,118 @@ export default function AdminPage() {
           {/* Users Tab */}
           <TabsContent value="users">
             <Card className="border-2 border-orange-100">
-              <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+              <CardHeader className="flex flex-row items-center justify-between px-3 sm:px-6 py-3 sm:py-4">
                 <CardTitle className="flex items-center gap-2 text-orange-600 text-base sm:text-lg">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                   Kelola User
                 </CardTitle>
+                <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                      onClick={() => setUserForm({
+                        username: '',
+                        password: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        role: 'cashier'
+                      })}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Tambah User
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Tambah User Baru</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Username</label>
+                        <Input
+                          value={userForm.username}
+                          onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
+                          className="border-orange-200 focus-visible:ring-orange-500"
+                          placeholder="Masukkan username"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Password</label>
+                        <Input
+                          type="password"
+                          value={userForm.password}
+                          onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                          className="border-orange-200 focus-visible:ring-orange-500"
+                          placeholder="Masukkan password"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Email</label>
+                        <Input
+                          type="email"
+                          value={userForm.email}
+                          onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                          className="border-orange-200 focus-visible:ring-orange-500"
+                          placeholder="Masukkan email"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">No. HP</label>
+                        <Input
+                          type="tel"
+                          value={userForm.phone}
+                          onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                          className="border-orange-200 focus-visible:ring-orange-500"
+                          placeholder="Masukkan nomor HP"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Alamat (Opsional)</label>
+                        <Textarea
+                          value={userForm.address}
+                          onChange={(e) => setUserForm({ ...userForm, address: e.target.value })}
+                          className="border-orange-200 focus-visible:ring-orange-500"
+                          placeholder="Masukkan alamat"
+                          rows={2}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Role</label>
+                        <Select
+                          value={userForm.role}
+                          onValueChange={(value: 'user' | 'cashier' | 'admin') =>
+                            setUserForm({ ...userForm, role: value })
+                          }
+                        >
+                          <SelectTrigger className="border-orange-200 focus-visible:ring-orange-500">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cashier">Kasir</SelectItem>
+                            <SelectItem value="user">User</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setUserDialogOpen(false)}
+                        className="border-orange-200 text-orange-600 hover:bg-orange-50"
+                      >
+                        Batal
+                      </Button>
+                      <Button
+                        onClick={handleSaveUser}
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                      >
+                        Simpan
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent className="px-3 sm:px-6">
                 <ScrollArea className="h-[350px] sm:h-[600px]">
@@ -1686,9 +1843,20 @@ export default function AdminPage() {
                               <h4 className="font-bold text-gray-800">{userData.username}</h4>
                               <p className="text-sm text-gray-500">{userData.email}</p>
                               <p className="text-sm text-gray-500">{userData.phone}</p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <Badge className={userData.role === 'admin' ? 'bg-purple-500' : 'bg-blue-500'}>
-                                  {userData.role}
+                              {userData.address && (
+                                <p className="text-sm text-gray-500">{userData.address}</p>
+                              )}
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                <Badge
+                                  className={
+                                    userData.role === 'admin'
+                                      ? 'bg-purple-500'
+                                      : userData.role === 'cashier'
+                                      ? 'bg-blue-500'
+                                      : 'bg-gray-500'
+                                  }
+                                >
+                                  {userData.role === 'cashier' ? 'Kasir' : userData.role}
                                 </Badge>
                                 <Badge className="bg-orange-500">
                                   {userData.points} Poin
