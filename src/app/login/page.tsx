@@ -21,6 +21,8 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
+    console.log('[Login Form] Submitting:', { username: formData.username, role })
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -31,7 +33,10 @@ export default function LoginPage() {
         })
       })
 
+      console.log('[Login Form] Response status:', res.status)
+
       const data = await res.json()
+      console.log('[Login Form] Response data:', { success: res.ok, error: data.error, hasUser: !!data.user })
 
       if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data.user))
@@ -55,6 +60,7 @@ export default function LoginPage() {
         }, 1500)
       } else {
         // Error toast
+        console.error('[Login Form] Login failed:', data.error)
         toast.error('Login Gagal', {
           description: data.error || 'Username atau password salah',
           position: 'top-center'
@@ -62,8 +68,9 @@ export default function LoginPage() {
       }
     } catch (error) {
       // Error toast
+      console.error('[Login Form] Exception:', error)
       toast.error('Terjadi Kesalahan', {
-        description: 'Silakan coba lagi nanti',
+        description: error instanceof Error ? error.message : 'Silakan coba lagi nanti',
         position: 'top-center'
       })
     } finally {

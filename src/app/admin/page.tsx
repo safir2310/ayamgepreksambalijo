@@ -696,6 +696,48 @@ export default function AdminPage() {
     }
   }
 
+  const handleResetPassword = async (userId: string, username: string) => {
+    const newPassword = prompt(`Masukkan password baru untuk ${username}:`)
+    if (!newPassword) return
+
+    if (newPassword.length < 4) {
+      toast.error('Password Terlalu Pendek', {
+        description: 'Password minimal 4 karakter',
+        position: 'top-center'
+      })
+      return
+    }
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password: newPassword
+        })
+      })
+
+      if (res.ok) {
+        toast.success('Password Berhasil Direset!', {
+          description: `Password ${username} berhasil diupdate`,
+          position: 'top-center'
+        })
+      } else {
+        const data = await res.json()
+        toast.error('Gagal Reset Password', {
+          description: data.error || 'Gagal mereset password',
+          position: 'top-center'
+        })
+      }
+    } catch (error) {
+      toast.error('Terjadi Kesalahan', {
+        description: 'Silakan coba lagi nanti',
+        position: 'top-center'
+      })
+    }
+  }
+
   const handleSaveShopProfile = async () => {
     setSavingShopProfile(true)
     try {
@@ -1864,14 +1906,26 @@ export default function AdminPage() {
                               </div>
                             </div>
                             {userData.role !== 'admin' && (
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => handleDeleteUser(userData.id)}
-                                className="border-red-200 text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => handleResetPassword(userData.id, userData.username)}
+                                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                  title="Reset Password"
+                                >
+                                  <User className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => handleDeleteUser(userData.id)}
+                                  className="border-red-200 text-red-600 hover:bg-red-50"
+                                  title="Hapus User"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </motion.div>
