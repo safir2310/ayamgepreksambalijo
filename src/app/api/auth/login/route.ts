@@ -7,6 +7,11 @@ function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex')
 }
 
+// Cek apakah password adalah SHA-256 hash
+function isHashedPassword(password: string): boolean {
+  return password && password.length === 64 && /^[0-9a-f]{64}$/.test(password)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { username, password, role } = await request.json()
@@ -34,12 +39,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
     }
 
+    const isStoredHashed = isHashedPassword(user.password)
     console.log('[Login API] User details:', {
       id: user.id,
       username: user.username,
       role: user.role,
       hasPassword: !!user.password,
-      storedPasswordPrefix: user.password ? user.password.substring(0, 10) + '...' : 'none'
+      isStoredHashed,
+      storedPasswordPrefix: user.password ? user.password.substring(0, 10) + '...' : 'none',
+      storedPasswordLength: user.password?.length
     })
 
     // Check if role matches
@@ -48,17 +56,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Role tidak sesuai' }, { status: 401 })
     }
 
-    // Compare hashed passwords
-    if (user.password !== hashedPassword) {
-      console.log('[Login API] Password mismatch:', {
+    // Check password - support both plain text (old users) and hashed (new users)
+    let passwordMatch = false
+
+    if (isStoredHashed) {
+      // Password already hashed, compare with hash
+      passwordMatch = user.password === hashedPassword
+      console.log('[Login API] Comparing hashed passwords:', {
         inputHash: hashedPassword.substring(0, 10) + '...',
         storedHash: user.password.substring(0, 10) + '...',
-        match: user.password === hashedPassword
+        match: passwordMatch
       })
+    } else {
+      // Password is plain text, compare directly OR with hash (for transition)
+      passwordMatch = user.password === password || user.password === hashedPassword
+      console.log('[Login API] Comparing plain text:', {
+        inputPassword: password,
+        storedPassword: user.password,
+        inputHash: hashedPassword.substring(0, 10) + '...',
+        directMatch: user.password === password,
+        hashMatch: user.password === hashedPassword,
+        finalMatch: passwordMatch
+      })
+
+      // Auto-update to hashed format for security
+      if (user.password === password && user.password !== hashedPassword) {
+        console.log('[Login API] Converting plain text password to hash...')
+        await db.user.update({
+          where: { id: user.id },
+          data: { password: hashedPassword }
+        })
+        console.log('[Login API] Password converted to hash')
+      }
+    }
+
+    if (!passwordMatch) {
+      console.log('[Login API] Password mismatch')
       return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 })
     }
 
-    console.log('[Login API] Login successful:', { username, role })
+    console.log('[Login API] Login successful:', { username, role, isStoredHashed })
 
     // Generate simple token
     const token = crypto.randomBytes(32).toString('hex')
