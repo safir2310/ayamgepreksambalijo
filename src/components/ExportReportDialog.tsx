@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FileSpreadsheet, FileText, CheckCircle2, XCircle } from 'lucide-react'
+import { FileSpreadsheet, FileText, CheckCircle2, XCircle, User } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Order {
@@ -44,13 +44,30 @@ interface ExportReportDialogProps {
 export default function ExportReportDialog({ open, onOpenChange, orders }: ExportReportDialogProps) {
   const [exportFormat, setExportFormat] = useState<'csv' | 'xlsx'>('xlsx')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [cashierFilter, setCashierFilter] = useState<string>('all')
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
   const [isExporting, setIsExporting] = useState(false)
 
+  // Get unique cashiers from orders
+  const getCashiers = () => {
+    const cashiers = new Map<string, string>()
+    orders.forEach(order => {
+      if (order.user?.username) {
+        cashiers.set(order.userId, order.user.username)
+      }
+    })
+    return Array.from(cashiers.entries()).map(([id, name]) => ({ id, name }))
+  }
+
   // Filter orders based on criteria
   const getFilteredOrders = (): Order[] => {
     let filtered = [...orders]
+
+    // Filter by cashier
+    if (cashierFilter !== 'all') {
+      filtered = filtered.filter(order => order.userId === cashierFilter)
+    }
 
     // Filter by status
     if (statusFilter !== 'all') {
@@ -103,6 +120,7 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
       'No HP',
       'Alamat',
       'Status',
+      'Kasir',
       'Total',
       'Poin',
       'Item Pesanan'
@@ -117,6 +135,7 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
         order.userPhone,
         order.userAddress.replace(/,/g, ' '),
         order.status,
+        order.user?.username || '-',
         order.total.toString(),
         order.pointsEarned.toString(),
         items.replace(/,/g, ';')
@@ -126,11 +145,11 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
     // Add summary row
     const summary = getSummary()
     rows.push([])
-    rows.push(['RINGKASAN', '', '', '', '', '', '', '', ''])
-    rows.push(['Total Pesanan', summary.totalOrders.toString(), '', '', '', '', '', '', ''])
-    rows.push(['Total Penjualan', `Rp ${summary.totalSales.toLocaleString('id-ID')}`, '', '', '', '', '', '', ''])
-    rows.push(['Pesanan Selesai', summary.completedOrders.toString(), '', '', '', '', '', '', ''])
-    rows.push(['Pesanan Pending', summary.pendingOrders.toString(), '', '', '', '', '', '', ''])
+    rows.push(['RINGKASAN', '', '', '', '', '', '', '', '', '', ''])
+    rows.push(['Total Pesanan', summary.totalOrders.toString(), '', '', '', '', '', '', '', ''])
+    rows.push(['Total Penjualan', `Rp ${summary.totalSales.toLocaleString('id-ID')}`, '', '', '', '', '', '', '', ''])
+    rows.push(['Pesanan Selesai', summary.completedOrders.toString(), '', '', '', '', '', '', '', ''])
+    rows.push(['Pesanan Pending', summary.pendingOrders.toString(), '', '', '', '', '', '', '', ''])
 
     const csvContent = [
       headers.join(','),
@@ -167,6 +186,7 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
           'No HP': order.userPhone,
           'Alamat': order.userAddress,
           'Status': order.status,
+          'Kasir': order.user?.username || '-',
           'Total': order.total,
           'Poin': order.pointsEarned,
           'Item Pesanan': items
@@ -202,6 +222,7 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
         { wch: 15 }, // No HP
         { wch: 40 }, // Alamat
         { wch: 15 }, // Status
+        { wch: 20 }, // Kasir
         { wch: 15 }, // Total
         { wch: 10 }, // Poin
         { wch: 50 }, // Item Pesanan
@@ -260,6 +281,7 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
 
       // Reset filters
       setStatusFilter('all')
+      setCashierFilter('all')
       setDateFrom('')
       setDateTo('')
     } catch (error) {
@@ -340,6 +362,27 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
             </div>
           </div>
 
+          {/* Filter by Cashier */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Filter Kasir
+            </Label>
+            <Select value={cashierFilter} onValueChange={setCashierFilter}>
+              <SelectTrigger className="border-orange-200 focus-visible:ring-orange-500">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Kasir</SelectItem>
+                {getCashiers().map((cashier) => (
+                  <SelectItem key={cashier.id} value={cashier.id}>
+                    {cashier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Filter by Status */}
           <div className="space-y-2">
             <Label>Filter Status</Label>
@@ -385,6 +428,9 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
               <p className="text-sm text-orange-700">
                 <span className="font-semibold">{summary.totalOrders}</span> pesanan akan diekspor
+                {cashierFilter !== 'all' ? (
+                  <span> (kasir: {getCashiers().find(c => c.id === cashierFilter)?.name})</span>
+                ) : ''}
                 {dateFrom || dateTo ? ' (dengan filter tanggal)' : ''}
                 {statusFilter !== 'all' ? ` (status: ${statusFilter})` : ''}
               </p>
