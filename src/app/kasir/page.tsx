@@ -28,7 +28,11 @@ import {
   MapPin,
   Phone,
   ShoppingBag,
-  Star
+  Star,
+  FileText,
+  TrendingUp,
+  Wallet,
+  Receipt
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -70,6 +74,9 @@ export default function KasirPage() {
   const [showOnlineOrdersModal, setShowOnlineOrdersModal] = useState(false)
   const [onlineOrders, setOnlineOrders] = useState<any[]>([])
   const [loadingOnlineOrders, setLoadingOnlineOrders] = useState(false)
+  const [showClosingModal, setShowClosingModal] = useState(false)
+  const [loadingClosingData, setLoadingClosingData] = useState(false)
+  const [closingData, setClosingData] = useState<any>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -668,6 +675,218 @@ export default function KasirPage() {
     window.location.href = '/login'
   }
 
+  const handleCashierClosing = async () => {
+    setShowClosingModal(true)
+    await fetchClosingData()
+  }
+
+  const fetchClosingData = async () => {
+    setLoadingClosingData(true)
+    try {
+      // Get today's date in local time
+      const today = new Date()
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0)
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
+
+      // Fetch today's cashier orders
+      const res = await fetch(`/api/orders?isCashierOrder=true&startDate=${startOfDay.toISOString()}&endDate=${endOfDay.toISOString()}`)
+      
+      if (res.ok) {
+        const orders = Array.isArray(await res.json()) ? await res.json() : []
+        
+        // Calculate statistics
+        const totalOrders = orders.length
+        const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.total, 0)
+        const totalPoints = orders.reduce((sum: number, order: any) => sum + (order.pointsEarned || 0), 0)
+        const totalItems = orders.reduce((sum: number, order: any) => sum + order.items.length, 0)
+        
+        // Payment methods breakdown
+        const paymentMethods = orders.reduce((acc: any, order: any) => {
+          const method = order.paymentMethod || 'cash'
+          acc[method] = (acc[method] || 0) + 1
+          return acc
+        }, {})
+
+        setClosingData({
+          date: today,
+          totalOrders,
+          totalRevenue,
+          totalPoints,
+          totalItems,
+          paymentMethods,
+          orders
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching closing data:', error)
+      toast.error('Gagal memuat data penutupan kasir')
+    } finally {
+      setLoadingClosingData(false)
+    }
+  }
+
+  const printClosingReport = () => {
+    if (!closingData) return
+    
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    const reportContent = `
+      <html>
+        <head>
+          <title>Laporan Penutupan Kasir</title>
+          <style>
+            body {
+              font-family: 'Courier New', monospace;
+              padding: 20px;
+              max-width: 400px;
+              margin: 0 auto;
+              font-size: 12px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+              border-bottom: 2px dashed #000;
+              padding-bottom: 10px;
+            }
+            .header h1 {
+              font-size: 16px;
+              margin: 0;
+              color: #f97316;
+            }
+            .section {
+              margin-bottom: 15px;
+            }
+            .section-title {
+              font-weight: bold;
+              margin-bottom: 8px;
+              background: #f0fdf4;
+              padding: 5px;
+            }
+            .stat {
+              display: flex;
+              justify-content: space-between;
+              margin: 5px 0;
+            }
+            .stat-label {
+              color: #666;
+            }
+            .stat-value {
+              font-weight: bold;
+            }
+            .divider {
+              border-top: 1px dashed #000;
+              margin: 10px 0;
+            }
+            .total {
+              font-size: 14px;
+              font-weight: bold;
+              text-align: right;
+              margin: 10px 0;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 20px;
+              font-size: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>AYAM GEPREK SAMBAL IJO</h1>
+            <p>Laporan Penutupan Kasir</p>
+            <p style="font-size: 10px; margin-top: 5px;">${new Date().toLocaleString('id-ID')}</p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">INFORMASI KASIR</div>
+            <div class="stat">
+              <span class="stat-label">Nama Kasir:</span>
+              <span class="stat-value">${user?.username}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Tanggal:</span>
+              <span class="stat-value">${formatDate(closingData.date)}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Waktu:</span>
+              <span class="stat-value">${formatTime(new Date())}</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section">
+            <div class="section-title">RINGKASAN PENJUALAN</div>
+            <div class="stat">
+              <span class="stat-label">Total Transaksi:</span>
+              <span class="stat-value">${closingData.totalOrders} pesanan</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Total Item Terjual:</span>
+              <span class="stat-value">${closingData.totalItems} item</span>
+            </div>
+            <div class="divider"></div>
+            <div class="stat">
+              <span class="stat-label">Total Omzet:</span>
+              <span class="stat-value">Rp ${closingData.totalRevenue.toLocaleString('id-ID')}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Rata-rata per Transaksi:</span>
+              <span class="stat-value">Rp ${closingData.totalOrders > 0 ? Math.round(closingData.totalRevenue / closingData.totalOrders).toLocaleString('id-ID') : '0'}</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section">
+            <div class="section-title">METODE PEMBAYARAN</div>
+            ${Object.entries(closingData.paymentMethods).map(([method, count]) => `
+              <div class="stat">
+                <span class="stat-label">${method.toUpperCase()}:</span>
+                <span class="stat-value">${count} transaksi</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section">
+            <div class="section-title">POIN DIBERIKAN</div>
+            <div class="stat">
+              <span class="stat-label">Total Poin:</span>
+              <span class="stat-value">+${closingData.totalPoints} poin</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="total">
+            TOTAL PENDAPATAN: Rp ${closingData.totalRevenue.toLocaleString('id-ID')}
+          </div>
+
+          <div class="footer">
+            <p>--- LAPORAN PENUTUPAN KASIR ---</p>
+            <p>Terima kasih atas kerja keras Anda!</p>
+            <p style="margin-top: 10px;">***</p>
+          </div>
+        </body>
+      </html>
+    `
+
+    printWindow.document.write(reportContent)
+    printWindow.document.close()
+    printWindow.print()
+  }
+
+  const handleCloseCashier = () => {
+    toast.success('Kasir Ditutup!', {
+      description: 'Laporan penutupan kasir telah disimpan',
+      position: 'top-center'
+    })
+    handleLogout()
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white">
@@ -729,6 +948,15 @@ export default function KasirPage() {
                 <User className="w-4 h-4 text-orange-600" />
                 <span className="text-sm font-medium text-gray-700">{user?.username}</span>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCashierClosing}
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                <Receipt className="w-4 h-4 mr-2" />
+                Tutup Kasir
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -1131,6 +1359,165 @@ export default function KasirPage() {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Cashier Closing Modal */}
+      {showClosingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+          >
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-full">
+                    <Receipt className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Penutupan Kasir</h2>
+                    <p className="text-sm text-gray-500">Laporan ringkasan penjualan hari ini</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowClosingModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {loadingClosingData ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+                </div>
+              ) : closingData ? (
+                <div className="space-y-6">
+                  {/* Cashier Info */}
+                  <Card className="border-2 border-purple-100">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <User className="w-5 h-5 text-purple-600" />
+                          <span className="font-semibold text-gray-900">Informasi Kasir</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="text-gray-600">Nama:</div>
+                        <div className="font-medium text-right">{user?.username}</div>
+                        <div className="text-gray-600">Tanggal:</div>
+                        <div className="font-medium text-right">{formatDate(closingData.date)}</div>
+                        <div className="text-gray-600">Waktu:</div>
+                        <div className="font-medium text-right">{formatTime(new Date())}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Sales Summary */}
+                  <Card className="border-2 border-green-100">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <TrendingUp className="w-5 h-5 text-green-600" />
+                        <span className="font-semibold text-gray-900">Ringkasan Penjualan</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-green-50 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {closingData.totalOrders}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">Transaksi</div>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-3 text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {closingData.totalItems}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">Item Terjual</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Total Omzet:</span>
+                          <span className="font-bold text-lg text-green-600">
+                            Rp {closingData.totalRevenue.toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Rata-rata/Transaksi:</span>
+                          <span className="font-medium text-gray-900">
+                            Rp {closingData.totalOrders > 0 ? Math.round(closingData.totalRevenue / closingData.totalOrders).toLocaleString('id-ID') : '0'}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Points & Payment Methods */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card className="border-2 border-yellow-100">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          <span className="font-semibold text-sm text-gray-900">Poin Diberikan</span>
+                        </div>
+                        <div className="text-2xl font-bold text-yellow-600 text-center">
+                          +{closingData.totalPoints}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-2 border-blue-100">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Wallet className="w-4 h-4 text-blue-600" />
+                          <span className="font-semibold text-sm text-gray-900">Metode Bayar</span>
+                        </div>
+                        <div className="space-y-1 text-xs">
+                          {Object.entries(closingData.paymentMethods).map(([method, count]) => (
+                            <div key={method} className="flex justify-between">
+                              <span className="text-gray-600 capitalize">{method}:</span>
+                              <span className="font-medium">{count}</span>
+                            </div>
+                          ))}
+                          {Object.keys(closingData.paymentMethods).length === 0 && (
+                            <div className="text-gray-400 text-center">Belum ada transaksi</div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={printClosingReport}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold"
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      Cetak Laporan
+                    </Button>
+                    <Button
+                      onClick={handleCloseCashier}
+                      className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Tutup Kasir
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p>Belum ada data penjualan hari ini</p>
                 </div>
               )}
             </div>

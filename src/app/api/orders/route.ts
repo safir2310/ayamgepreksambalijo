@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId')
     const isCashierOrder = searchParams.get('isCashierOrder')
     const status = searchParams.get('status')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
 
     // Build where clause
     const where: any = {}
@@ -42,6 +44,14 @@ export async function GET(request: NextRequest) {
     
     if (status) {
       where.status = status
+    }
+
+    // Add date range filter
+    if (startDate && endDate) {
+      where.createdAt = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
     }
 
     const orders = await db.order.findMany({
