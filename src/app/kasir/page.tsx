@@ -206,6 +206,8 @@ export default function KasirPage() {
     return matchesSearch && matchesCategory
   })
 
+  const quickAmounts = [5000, 10000, 20000, 50000, 100000]
+
   const handleProcessOrder = () => {
     if (cart.length === 0) {
       toast.error('Keranjang Kosong', {
@@ -770,9 +772,22 @@ export default function KasirPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Jumlah Uang Diterima
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Jumlah Uang Diterima
+                    </label>
+                    {paymentReceived && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPaymentReceived('')}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 text-xs"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Reset
+                      </Button>
+                    )}
+                  </div>
                   <Input
                     type="number"
                     value={paymentReceived}
@@ -782,6 +797,38 @@ export default function KasirPage() {
                     autoFocus
                   />
                 </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Jumlah Cepat
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {quickAmounts.map((amount) => (
+                      <Button
+                        key={amount}
+                        variant="outline"
+                        onClick={() => {
+                          const currentAmount = parseFloat(paymentReceived) || 0
+                          setPaymentReceived((currentAmount + amount).toString())
+                        }}
+                        className="text-sm py-3 border-orange-200 hover:bg-orange-50 hover:border-orange-300 text-orange-600 font-semibold"
+                      >
+                        {amount >= 1000
+                          ? `${(amount / 1000).toFixed(0)}K`
+                          : amount}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setPaymentReceived(getCartTotal().toString())}
+                  className="w-full bg-green-50 border-green-200 hover:bg-green-100 text-green-700 font-semibold"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Uang Pas (Rp {getCartTotal().toLocaleString('id-ID')})
+                </Button>
 
                 {!isNaN(parseFloat(paymentReceived)) && parseFloat(paymentReceived) >= getCartTotal() && (
                   <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
