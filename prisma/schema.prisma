@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -18,7 +18,7 @@ model User {
   phone        String
   address      String?
   dateOfBirth  String?
-  role         String        @default("user") // "user" or "admin"
+  role         String        @default("user") // "user", "cashier", or "admin"
   points       Int           @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -72,11 +72,17 @@ model Order {
   total           Int
   status          String      @default("pending") // "pending", "approved", "processing", "completed", "cancelled"
   whatsappMessage String?
+  paymentMethod   String?     @default("cash") // "cash", "card", "transfer"
+  cashReceived    Int         @default(0)
+  cashChange      Int         @default(0)
+  isCashierOrder  Boolean     @default(false)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  shiftId         String?
 
   user            User        @relation(fields: [userId], references: [id])
   items           OrderItem[]
+  shift           CashierShift? @relation(fields: [shiftId], references: [id])
   pointsEarned    Int         @default(0)
 }
 
@@ -134,6 +140,24 @@ model RedeemItem {
   user         User        @relation(fields: [userId], references: [id])
   product      Product     @relation(fields: [productId], references: [id])
   redeemCode   RedeemCode?
+}
+
+model CashierShift {
+  id              String      @id @default(cuid())
+  cashierId       String
+  cashierName     String
+  startTime       DateTime    @default(now())
+  endTime         DateTime?
+  totalOrders     Int         @default(0)
+  totalRevenue    Int         @default(0)
+  totalPoints     Int         @default(0)
+  totalItems      Int         @default(0)
+  status          String      @default("active") // "active", "closed"
+  paymentMethods  String?     @default("{}")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  orders          Order[]
 }
 
 model ShopProfile {

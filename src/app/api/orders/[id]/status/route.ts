@@ -22,6 +22,14 @@ async function emitEvent(event: string, data: any) {
   }
 }
 
+// PUT method for order status update (redirects to PATCH)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return await PATCH(request, { params })
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

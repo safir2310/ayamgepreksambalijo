@@ -26,25 +26,65 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    const isCashierOrder = searchParams.get('isCashierOrder')
+    const status = searchParams.get('status')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+    const date = searchParams.get('date')
+    const shiftId = searchParams.get('shiftId')
 
+    console.log('[Orders API] Filters:', { userId, isCashierOrder, status, startDate, endDate, date, shiftId })
+
+    // Build where clause
+    const where: any = {}
+    
     if (userId) {
-      const orders = await db.order.findMany({
-        where: { userId },
-        include: {
-          items: {
-            include: {
-              product: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
+      where.userId = userId
+    }
+    
+    if (isCashierOrder) {
+      where.isCashierOrder = isCashierOrder === 'true'
+    }
+    
+    if (status) {
+      where.status = status
+    }
+
+    if (shiftId) {
+      where.shiftId = shiftId
+    }
+
+    // Add date filter
+    if (date) {
+      // Filter by single date (YYYY-MM-DD format)
+      const startOfDay = new Date(date)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(date)
+      endOfDay.setHours(23, 59, 59, 999)
+      
+      where.createdAt = {
+        gte: startOfDay,
+        lte: endOfDay
+      }
+      console.log('[Orders API] Single date filter applied:', {
+        date,
+        gte: startOfDay,
+        lte: endOfDay
       })
-      return NextResponse.json(orders)
+    } else if (startDate && endDate) {
+      // Add date range filter
+      where.createdAt = {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
+      console.log('[Orders API] Date range filter applied:', {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      })
     }
 
     const orders = await db.order.findMany({
+      where,
       include: {
         items: {
           include: {
@@ -57,6 +97,8 @@ export async function GET(request: NextRequest) {
         createdAt: 'desc'
       }
     })
+
+    console.log('[Orders API] Orders found:', orders.length)
 
     return NextResponse.json(orders)
   } catch (error) {
