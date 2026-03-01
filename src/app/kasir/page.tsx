@@ -917,11 +917,28 @@ export default function KasirPage() {
   }
 
   const handleCloseCashier = () => {
+    // Clear all POS data
+    setCart([])
+    setPaymentReceived('')
+    setClosingData(null)
+    setOnlineOrderCount(0)
+    setLastCheckedOrderCount(0)
+    setShowOrdersNotification(false)
+    setShowClosingModal(false)
+    setSearchQuery('')
+    setSelectedCategory('all')
+    setOnlineOrders([])
+
     toast.success('Kasir Ditutup!', {
-      description: 'Laporan penutupan kasir telah disimpan',
-      position: 'top-center'
+      description: 'Semua data POS telah dikosongkan',
+      position: 'top-center',
+      duration: 2000
     })
-    handleLogout()
+
+    // Delay logout to show the toast message
+    setTimeout(() => {
+      handleLogout()
+    }, 1500)
   }
 
   if (loading) {
