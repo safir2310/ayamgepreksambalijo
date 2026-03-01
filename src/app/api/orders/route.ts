@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const date = searchParams.get('date')
+    const shiftId = searchParams.get('shiftId')
 
-    console.log('[Orders API] Filters:', { userId, isCashierOrder, status, startDate, endDate, date })
+    console.log('[Orders API] Filters:', { userId, isCashierOrder, status, startDate, endDate, date, shiftId })
 
     // Build where clause
     const where: any = {}
@@ -47,6 +48,10 @@ export async function GET(request: NextRequest) {
     
     if (status) {
       where.status = status
+    }
+
+    if (shiftId) {
+      where.shiftId = shiftId
     }
 
     // Add date filter

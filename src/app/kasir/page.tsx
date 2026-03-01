@@ -77,6 +77,7 @@ export default function KasirPage() {
   const [showClosingModal, setShowClosingModal] = useState(false)
   const [loadingClosingData, setLoadingClosingData] = useState(false)
   const [closingData, setClosingData] = useState<any>(null)
+  const [currentShiftId, setCurrentShiftId] = useState<string | null>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -99,6 +100,7 @@ export default function KasirPage() {
     fetchProducts()
     fetchCategories()
     checkOnlineOrders()
+    createOrGetShift(parsedUser.id, parsedUser.username)
   }, [])
 
   // Update time every second
@@ -301,6 +303,24 @@ export default function KasirPage() {
     }
   }
 
+  const createOrGetShift = async (cashierId: string, cashierName: string) => {
+    try {
+      const res = await fetch('/api/cashier-shifts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cashierId, cashierName })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setCurrentShiftId(data.shift.id)
+        console.log('[Shift] Active shift:', data.shift.id)
+      }
+    } catch (error) {
+      console.error('[Shift] Error creating/getting shift:', error)
+    }
+  }
+
   const addToCart = (product: Product) => {
     if (product.stock <= 0) {
       toast.error('Stok Habis', {
@@ -448,7 +468,8 @@ export default function KasirPage() {
         total: total,
         paymentMethod: 'cash',
         cashReceived: payment,
-        cashChange: payment - total
+        cashChange: payment - total,
+        shiftId: currentShiftId
       }
 
       console.log('[Cashier] Sending order data:', orderData)
@@ -683,21 +704,14 @@ export default function KasirPage() {
   const fetchClosingData = async () => {
     setLoadingClosingData(true)
     try {
-      // Get today's date in local time
-      const today = new Date()
-      
-      // Format dates as YYYY-MM-DD for better compatibility
-      const formatDateForAPI = (date: Date) => {
-        return date.toISOString().split('T')[0]
+      if (!currentShiftId) {
+        throw new Error('Tidak ada shift aktif')
       }
-      
-      const startDate = formatDateForAPI(today)
-      const endDate = formatDateForAPI(today)
 
-      console.log('[Closing Data] Fetching orders:', { startDate, endDate })
+      console.log('[Closing Data] Fetching orders for shift:', currentShiftId)
 
-      // Fetch today's cashier orders - filter by today's date only
-      const res = await fetch(`/api/orders?isCashierOrder=true&date=${startDate}`)
+      // Fetch orders for the current shift
+      const res = await fetch(`/api/orders?isCashierOrder=true&shiftId=${currentShiftId}`)
       
       console.log('[Closing Data] Response status:', res.status)
       
@@ -721,7 +735,7 @@ export default function KasirPage() {
         }, {})
 
         const closingDataResult = {
-          date: today,
+          date: new Date(),
           totalOrders,
           totalRevenue,
           totalPoints,
@@ -735,13 +749,13 @@ export default function KasirPage() {
         setClosingData(closingDataResult)
         
         if (totalOrders === 0) {
-          toast.info('Belum ada penjualan hari ini', {
+          toast.info('Belum ada penjualan di shift ini', {
             description: 'Silakan lakukan penjualan terlebih dahulu',
             position: 'top-center',
             duration: 3000
           })
         } else {
-          toast.success(`Berhasil memuat ${totalOrders} transaksi hari ini`, {
+          toast.success(`Berhasil memuat ${totalOrders} transaksi shift ini`, {
             position: 'top-center',
             duration: 3000
           })
@@ -916,7 +930,27 @@ export default function KasirPage() {
     printWindow.print()
   }
 
-  const handleCloseCashier = () => {
+  const handleCloseCashier = async () => {
+    // Close the shift first if there is an active shift
+    if (currentShiftId && closingData) {
+      try {
+        await fetch(`/api/cashier-shifts/${currentShiftId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            totalOrders: closingData.totalOrders,
+            totalRevenue: closingData.totalRevenue,
+            totalPoints: closingData.totalPoints,
+            totalItems: closingData.totalItems,
+            paymentMethods: closingData.paymentMethods
+          })
+        })
+        console.log('[Shift] Shift closed successfully:', currentShiftId)
+      } catch (error) {
+        console.error('[Shift] Error closing shift:', error)
+      }
+    }
+
     // Clear all POS data
     setCart([])
     setPaymentReceived('')
@@ -928,9 +962,10 @@ export default function KasirPage() {
     setSearchQuery('')
     setSelectedCategory('all')
     setOnlineOrders([])
+    setCurrentShiftId(null)
 
     toast.success('Kasir Ditutup!', {
-      description: 'Semua data POS telah dikosongkan',
+      description: 'Shift kasir ditutup dan data POS dikosongkan',
       position: 'top-center',
       duration: 2000
     })

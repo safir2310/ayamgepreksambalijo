@@ -30,10 +30,11 @@ export async function POST(request: NextRequest) {
       total,
       paymentMethod,
       cashReceived,
-      cashChange
+      cashChange,
+      shiftId
     } = body
 
-    console.log('[Cashier Order] Received data:', { userId, userName, itemCount: items?.length, total })
+    console.log('[Cashier Order] Received data:', { userId, userName, itemCount: items?.length, total, shiftId })
 
     // Validate required fields
     if (!userId || !items || items.length === 0 || !total) {
@@ -108,7 +109,8 @@ export async function POST(request: NextRequest) {
           paymentMethod: paymentMethod || 'cash',
           cashReceived: cashReceived || 0,
           cashChange: cashChange || 0,
-          isCashierOrder: true
+          isCashierOrder: true,
+          shiftId: shiftId || null
         },
         include: {
           items: {
