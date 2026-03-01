@@ -1756,23 +1756,60 @@ export default function AdminPage() {
                   <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                   Kelola User
                 </CardTitle>
-                <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                      onClick={() => setUserForm({
-                        username: '',
-                        password: '',
-                        email: '',
-                        phone: '',
-                        address: '',
-                        role: 'cashier'
-                      })}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Tambah User
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      if (!confirm('Ini akan mengonversi semua password user yang masih dalam format plain text menjadi hashed. Lanjutkan?')) {
+                        return
+                      }
+
+                      try {
+                        const res = await fetch('/api/auth/fix-passwords', {
+                          method: 'POST'
+                        })
+                        const data = await res.json()
+
+                        if (data.success) {
+                          toast.success('Password Berhasil Diperbaiki!', {
+                            description: `${data.fixedCount} password dikonversi, ${data.alreadyHashedCount} sudah hashed`,
+                            position: 'top-center'
+                          })
+                        } else {
+                          toast.error('Gagal Memperbaiki Password', {
+                            description: data.error || 'Terjadi kesalahan',
+                            position: 'top-center'
+                          })
+                        }
+                      } catch (error) {
+                        toast.error('Terjadi Kesalahan', {
+                          description: 'Silakan coba lagi',
+                          position: 'top-center'
+                        })
+                      }
+                    }}
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    🔧 Fix Passwords
+                  </Button>
+                  <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                        onClick={() => setUserForm({
+                          username: '',
+                          password: '',
+                          email: '',
+                          phone: '',
+                          address: '',
+                          role: 'cashier'
+                        })}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Tambah User
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Tambah User Baru</DialogTitle>
@@ -1863,6 +1900,7 @@ export default function AdminPage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                </div>
               </CardHeader>
               <CardContent className="px-3 sm:px-6">
                 <ScrollArea className="h-[350px] sm:h-[600px]">
