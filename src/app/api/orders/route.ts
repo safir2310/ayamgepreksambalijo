@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
+    const date = searchParams.get('date')
+
+    console.log('[Orders API] Filters:', { userId, isCashierOrder, status, startDate, endDate, date })
 
     // Build where clause
     const where: any = {}
@@ -46,12 +49,33 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
-    // Add date range filter
-    if (startDate && endDate) {
+    // Add date filter
+    if (date) {
+      // Filter by single date (YYYY-MM-DD format)
+      const startOfDay = new Date(date)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(date)
+      endOfDay.setHours(23, 59, 59, 999)
+      
+      where.createdAt = {
+        gte: startOfDay,
+        lte: endOfDay
+      }
+      console.log('[Orders API] Single date filter applied:', {
+        date,
+        gte: startOfDay,
+        lte: endOfDay
+      })
+    } else if (startDate && endDate) {
+      // Add date range filter
       where.createdAt = {
         gte: new Date(startDate),
         lte: new Date(endDate)
       }
+      console.log('[Orders API] Date range filter applied:', {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      })
     }
 
     const orders = await db.order.findMany({
@@ -69,9 +93,11 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    console.log('[Orders API] Orders found:', orders.length)
+
     return NextResponse.json(orders)
   } catch (error) {
-    console.error('Fetch orders error:', error)
+    console.error('[Orders API] Fetch orders error:', error)
     return NextResponse.json({ error: 'Terjadi kesalahan' }, { status: 500 })
   }
 }

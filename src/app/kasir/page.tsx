@@ -685,20 +685,33 @@ export default function KasirPage() {
     try {
       // Get today's date in local time
       const today = new Date()
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0)
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
+      
+      // Format dates as YYYY-MM-DD for better compatibility
+      const formatDateForAPI = (date: Date) => {
+        return date.toISOString().split('T')[0]
+      }
+      
+      const startDate = formatDateForAPI(today)
+      const endDate = formatDateForAPI(today)
 
-      // Fetch today's cashier orders
-      const res = await fetch(`/api/orders?isCashierOrder=true&startDate=${startOfDay.toISOString()}&endDate=${endOfDay.toISOString()}`)
+      console.log('[Closing Data] Fetching orders:', { startDate, endDate })
+
+      // Fetch today's cashier orders - filter by today's date only
+      const res = await fetch(`/api/orders?isCashierOrder=true&date=${startDate}`)
+      
+      console.log('[Closing Data] Response status:', res.status)
       
       if (res.ok) {
-        const orders = Array.isArray(await res.json()) ? await res.json() : []
+        const data = await res.json()
+        const orders = Array.isArray(data) ? data : []
+        
+        console.log('[Closing Data] Orders fetched:', orders.length)
         
         // Calculate statistics
         const totalOrders = orders.length
-        const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.total, 0)
+        const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0)
         const totalPoints = orders.reduce((sum: number, order: any) => sum + (order.pointsEarned || 0), 0)
-        const totalItems = orders.reduce((sum: number, order: any) => sum + order.items.length, 0)
+        const totalItems = orders.reduce((sum: number, order: any) => sum + (order.items?.length || 0), 0)
         
         // Payment methods breakdown
         const paymentMethods = orders.reduce((acc: any, order: any) => {
@@ -707,7 +720,7 @@ export default function KasirPage() {
           return acc
         }, {})
 
-        setClosingData({
+        const closingDataResult = {
           date: today,
           totalOrders,
           totalRevenue,
@@ -715,11 +728,35 @@ export default function KasirPage() {
           totalItems,
           paymentMethods,
           orders
-        })
+        }
+        
+        console.log('[Closing Data] Statistics calculated:', closingDataResult)
+        
+        setClosingData(closingDataResult)
+        
+        if (totalOrders === 0) {
+          toast.info('Belum ada penjualan hari ini', {
+            description: 'Silakan lakukan penjualan terlebih dahulu',
+            position: 'top-center',
+            duration: 3000
+          })
+        } else {
+          toast.success(`Berhasil memuat ${totalOrders} transaksi hari ini`, {
+            position: 'top-center',
+            duration: 3000
+          })
+        }
+      } else {
+        const errorText = await res.text()
+        console.error('[Closing Data] API error:', errorText)
+        throw new Error(`Gagal memuat data: ${res.status}`)
       }
     } catch (error) {
-      console.error('Error fetching closing data:', error)
-      toast.error('Gagal memuat data penutupan kasir')
+      console.error('[Closing Data] Error fetching closing data:', error)
+      toast.error('Gagal memuat data penutupan kasir', {
+        description: error instanceof Error ? error.message : 'Silakan coba lagi',
+        position: 'top-center'
+      })
     } finally {
       setLoadingClosingData(false)
     }
