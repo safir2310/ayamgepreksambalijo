@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ImageUpload from '@/components/ImageUpload'
+import ExportReportDialog from '@/components/ExportReportDialog'
 import {
   Dialog,
   DialogContent,
@@ -39,7 +40,8 @@ import {
   Phone as PhoneIcon,
   Instagram as InstagramIcon,
   Facebook as FacebookIcon,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  Download
 } from 'lucide-react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { toast } from 'sonner'
@@ -170,6 +172,9 @@ export default function AdminPage() {
     logo: ''
   })
   const [savingShopProfile, setSavingShopProfile] = useState(false)
+
+  // Export dialog
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // WebSocket connection for admins
   useWebSocket(null, 'admin', {
@@ -924,11 +929,19 @@ export default function AdminPage() {
           {/* Orders Tab */}
           <TabsContent value="orders">
             <Card className="border-2 border-orange-100">
-              <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+              <CardHeader className="flex flex-row items-center justify-between px-3 sm:px-6 py-3 sm:py-4">
                 <CardTitle className="flex items-center gap-2 text-orange-600 text-base sm:text-lg">
                   <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                   Kelola Pesanan
                 </CardTitle>
+                <Button
+                  onClick={() => setExportDialogOpen(true)}
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Ekspor</span>
+                </Button>
               </CardHeader>
               <CardContent className="px-3 sm:px-6">
                 <ScrollArea className="h-[350px] sm:h-[600px]">
@@ -1843,6 +1856,13 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Export Dialog */}
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        orders={orders}
+      />
 
       {/* Footer */}
       <footer className="bg-gradient-to-b from-orange-800 to-orange-900 border-t border-orange-700 py-4 sm:py-6">
