@@ -24,7 +24,10 @@ import {
   CheckCircle,
   Bell,
   Clock,
-  Calendar
+  Calendar,
+  MapPin,
+  Phone,
+  ShoppingBag
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -63,6 +66,9 @@ export default function KasirPage() {
   const [onlineOrderCount, setOnlineOrderCount] = useState(0)
   const [lastCheckedOrderCount, setLastCheckedOrderCount] = useState(0)
   const [showOrdersNotification, setShowOrdersNotification] = useState(false)
+  const [showOnlineOrdersModal, setShowOnlineOrdersModal] = useState(false)
+  const [onlineOrders, setOnlineOrders] = useState<any[]>([])
+  const [loadingOnlineOrders, setLoadingOnlineOrders] = useState(false)
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -166,9 +172,100 @@ export default function KasirPage() {
     })
   }
 
-  const handleViewOnlineOrders = () => {
-    // Navigate to admin dashboard to view orders
-    window.location.href = '/admin'
+  const handleViewOnlineOrders = async () => {
+    setShowOnlineOrdersModal(true)
+    await fetchOnlineOrders()
+  }
+
+  const fetchOnlineOrders = async () => {
+    setLoadingOnlineOrders(true)
+    try {
+      const res = await fetch('/api/orders?isCashierOrder=false&status=pending')
+      if (res.ok) {
+        const data = await res.json()
+        setOnlineOrders(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error('Error fetching online orders:', error)
+      toast.error('Gagal memuat pesanan online')
+    } finally {
+      setLoadingOnlineOrders(false)
+    }
+  }
+
+  const handleTakeOrder = async (order: any) => {
+    try {
+      // Clear cart first
+      setCart([])
+
+      // Add order items to cart
+      const newCart: CartItem[] = order.items.map((item: any) => ({
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          description: item.product.description || null,
+          price: item.price,
+          discount: 0,
+          image: item.product.image || null,
+          stock: item.product.stock || 999,
+          category: {
+            name: item.product.category?.name || 'Umum'
+          },
+          isRedeemable: false
+        },
+        quantity: item.quantity,
+        subtotal: item.subtotal
+      }))
+
+      setCart(newCart)
+
+      // Update order status to processing
+      const res = await fetch(`/api/orders/${order.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'processing' })
+      })
+
+      if (res.ok) {
+        toast.success('Pesanan Diambil!', {
+          description: `Pesanan ${order.userName} telah dimasukkan ke keranjang`,
+          position: 'top-center'
+        })
+        
+        // Close modal and refresh online orders
+        setShowOnlineOrdersModal(false)
+        setOnlineOrderCount(prev => Math.max(0, prev - 1))
+        setLastCheckedOrderCount(onlineOrderCount - 1)
+        
+        if (onlineOrderCount - 1 === 0) {
+          setShowOrdersNotification(false)
+        }
+      } else {
+        throw new Error('Gagal update status pesanan')
+      }
+    } catch (error) {
+      console.error('Error taking order:', error)
+      toast.error('Gagal mengambil pesanan', {
+        description: error instanceof Error ? error.message : 'Silakan coba lagi',
+        position: 'top-center'
+      })
+    }
+  }
+
+  const formatOrderTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const formatOrderDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short'
+    })
   }
 
   const fetchProducts = async () => {
@@ -887,6 +984,120 @@ export default function KasirPage() {
           </div>
         </div>
       </footer>
+
+      {/* Online Orders Modal */}
+      {showOnlineOrdersModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+          >
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-full">
+                    <ShoppingBag className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Pesanan Online</h2>
+                    <p className="text-sm text-gray-500">Daftar pesanan yang menunggu diproses</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowOnlineOrdersModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {loadingOnlineOrders ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
+                </div>
+              ) : onlineOrders.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">Tidak ada pesanan online</p>
+                  <p className="text-sm mt-2">Semua pesanan telah diproses</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {onlineOrders.map((order) => (
+                    <Card key={order.id} className="border-2 border-blue-100 hover:border-blue-300 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-bold text-lg text-gray-900">{order.userName}</h3>
+                              <Badge className="bg-orange-500">Online</Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>{formatOrderDate(order.createdAt)}</span>
+                              <span>{formatOrderTime(order.createdAt)}</span>
+                              <span>#{order.id.slice(-6).toUpperCase()}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-orange-600">
+                              Rp {order.total.toLocaleString('id-ID')}
+                            </p>
+                            <p className="text-sm text-gray-500">{order.items.length} item</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                          {order.userPhone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-4 h-4" />
+                              <span>{order.userPhone}</span>
+                            </div>
+                          )}
+                          {order.userAddress && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              <span className="truncate max-w-xs">{order.userAddress}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Detail Pesanan:</p>
+                          <div className="space-y-2">
+                            {order.items.map((item: any, idx: number) => (
+                              <div key={idx} className="flex justify-between text-sm">
+                                <span className="text-gray-600">
+                                  {item.product.name} x{item.quantity}
+                                </span>
+                                <span className="font-medium">
+                                  Rp {item.subtotal.toLocaleString('id-ID')}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <Button
+                          onClick={() => handleTakeOrder(order)}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3"
+                        >
+                          <ShoppingBag className="w-4 h-4 mr-2" />
+                          Ambil Pesanan
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Payment Modal */}
       {showPaymentModal && (

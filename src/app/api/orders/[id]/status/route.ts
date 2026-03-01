@@ -22,6 +22,14 @@ async function emitEvent(event: string, data: any) {
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  // Redirect to PATCH handler for consistency
+  return await PATCH(request, { params })
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
