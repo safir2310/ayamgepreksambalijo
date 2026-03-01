@@ -3,6 +3,23 @@ import { db } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[Cashier Order] Database client check:', {
+      dbExists: !!db,
+      dbType: typeof db,
+      hasOrder: !!(db as any).order,
+      hasProduct: !!(db as any).product,
+      hasUser: !!(db as any).user,
+      hasPointHistory: !!(db as any).pointHistory
+    })
+
+    if (!db) {
+      console.error('[Cashier Order] Database client is undefined!')
+      return NextResponse.json(
+        { error: 'Database connection error' },
+        { status: 500 }
+      )
+    }
+
     const body = await request.json()
     const {
       userId,
@@ -53,10 +70,23 @@ export async function POST(request: NextRequest) {
 
     console.log('[Cashier Order] Stock validation passed, creating order...')
 
-    // Create order and update stock in transaction
-    const order = await db.$transaction(async (tx) => {
-      // Create order
-      const newOrder = await tx.order.create({
+    try {
+      // Create order and update stock in transaction
+      const order = await db.$transaction(async (tx) => {
+        console.log('[Cashier Order] Transaction started')
+
+        // Validate tx has required models
+        if (!tx.order || !tx.product || !tx.user) {
+          console.error('[Cashier Order] Transaction missing required models:', {
+            hasOrder: !!tx.order,
+            hasProduct: !!tx.product,
+            hasUser: !!tx.user
+          })
+          throw new Error('Database transaction error: missing models')
+        }
+
+        // Create order
+        const newOrder = await tx.order.create({
         data: {
           userId,
           userName,
@@ -138,7 +168,7 @@ export async function POST(request: NextRequest) {
 
       // Create points history
       if (pointsEarned > 0) {
-        await tx.pointsHistory.create({
+        await tx.pointHistory.create({
           data: {
             userId,
             orderId: newOrder.id,
@@ -154,6 +184,10 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('[Cashier Order] Transaction completed successfully')
+    } catch (transactionError) {
+      console.error('[Cashier Order] Transaction error:', transactionError)
+      throw transactionError
+    }
 
     return NextResponse.json({
       success: true,

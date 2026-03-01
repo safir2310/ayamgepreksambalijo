@@ -21,7 +21,10 @@ import {
   X,
   CreditCard,
   DollarSign,
-  CheckCircle
+  CheckCircle,
+  Bell,
+  Clock,
+  Calendar
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -56,6 +59,10 @@ export default function KasirPage() {
   const [processingOrder, setProcessingOrder] = useState(false)
   const [paymentReceived, setPaymentReceived] = useState('')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [onlineOrderCount, setOnlineOrderCount] = useState(0)
+  const [lastCheckedOrderCount, setLastCheckedOrderCount] = useState(0)
+  const [showOrdersNotification, setShowOrdersNotification] = useState(false)
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -77,7 +84,92 @@ export default function KasirPage() {
     setUser(parsedUser)
     fetchProducts()
     fetchCategories()
+    checkOnlineOrders()
   }, [])
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Check for new online orders every 30 seconds
+  useEffect(() => {
+    const orderCheckInterval = setInterval(() => {
+      checkOnlineOrders()
+    }, 30000)
+    return () => clearInterval(orderCheckInterval)
+  }, [])
+
+  // Show notification when new orders arrive
+  useEffect(() => {
+    if (onlineOrderCount > lastCheckedOrderCount && lastCheckedOrderCount > 0) {
+      setShowOrdersNotification(true)
+      const newOrdersCount = onlineOrderCount - lastCheckedOrderCount
+      toast.success('Pesanan Online Baru!', {
+        description: `${newOrdersCount} pesanan online baru telah masuk`,
+        position: 'top-right',
+        duration: 5000
+      })
+      // Play notification sound if available
+      playNotificationSound()
+    } else if (onlineOrderCount === 0) {
+      setShowOrdersNotification(false)
+    }
+  }, [onlineOrderCount, lastCheckedOrderCount])
+
+  const checkOnlineOrders = async () => {
+    try {
+      const res = await fetch('/api/orders?isCashierOrder=false&status=pending')
+      if (res.ok) {
+        const data = await res.json()
+        const count = Array.isArray(data) ? data.length : 0
+        setLastCheckedOrderCount(onlineOrderCount)
+        setOnlineOrderCount(count)
+        
+        if (count > 0) {
+          setShowOrdersNotification(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking online orders:', error)
+    }
+  }
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('/notification.mp3')
+      audio.play().catch(() => {
+        // Ignore error if audio is blocked
+      })
+    } catch (error) {
+      // Ignore error
+    }
+  }
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    })
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  }
+
+  const handleViewOnlineOrders = () => {
+    // Navigate to admin dashboard to view orders
+    window.location.href = '/admin'
+  }
 
   const fetchProducts = async () => {
     try {
@@ -468,6 +560,35 @@ export default function KasirPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Online Orders Notification */}
+              {showOrdersNotification && (
+                <motion.button
+                  onClick={handleViewOnlineOrders}
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    boxShadow: [
+                      '0 0 0 0 rgba(239, 68, 68, 0.7)',
+                      '0 0 0 10px rgba(239, 68, 68, 0)',
+                      '0 0 0 0 rgba(239, 68, 68, 0)'
+                    ]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: 'easeInOut'
+                  }}
+                  className="relative flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
+                >
+                  <Bell className="w-5 h-5" />
+                  <span className="font-semibold">{onlineOrderCount} Pesanan Baru</span>
+                  <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full"
+                  />
+                </motion.button>
+              )}
+              
               <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
                 <User className="w-4 h-4 text-orange-600" />
                 <span className="text-sm font-medium text-gray-700">{user?.username}</span>
@@ -740,6 +861,32 @@ export default function KasirPage() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="sticky bottom-0 bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg mt-auto">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                <span className="text-sm font-medium">Kasir: <span className="font-bold">{user?.username}</span></span>
+              </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm font-medium">{formatDate(currentTime)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-bold text-lg">{formatTime(currentTime)}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-orange-100">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Ayam Geprek Sambal Ijo</span>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Payment Modal */}
       {showPaymentModal && (

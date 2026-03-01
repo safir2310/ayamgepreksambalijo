@@ -26,25 +26,26 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    const isCashierOrder = searchParams.get('isCashierOrder')
+    const status = searchParams.get('status')
 
+    // Build where clause
+    const where: any = {}
+    
     if (userId) {
-      const orders = await db.order.findMany({
-        where: { userId },
-        include: {
-          items: {
-            include: {
-              product: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      })
-      return NextResponse.json(orders)
+      where.userId = userId
+    }
+    
+    if (isCashierOrder) {
+      where.isCashierOrder = isCashierOrder === 'true'
+    }
+    
+    if (status) {
+      where.status = status
     }
 
     const orders = await db.order.findMany({
+      where,
       include: {
         items: {
           include: {
