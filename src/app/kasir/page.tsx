@@ -224,6 +224,8 @@ export default function KasirPage() {
     const total = getCartTotal()
     const payment = parseFloat(paymentReceived)
 
+    console.log('[Cashier] Processing payment:', { total, payment, cartLength: cart.length, userId: user?.id })
+
     if (isNaN(payment) || payment < total) {
       toast.error('Pembayaran Tidak Cukup', {
         description: 'Masukkan jumlah pembayaran yang benar',
@@ -235,29 +237,36 @@ export default function KasirPage() {
     setProcessingOrder(true)
 
     try {
+      const orderData = {
+        userId: user.id,
+        userName: 'Kasir - ' + user.username,
+        userPhone: user.phone || '-',
+        userAddress: '-',
+        items: cart.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: getDiscountedPrice(item.product),
+          subtotal: item.subtotal
+        })),
+        total: total,
+        paymentMethod: 'cash',
+        cashReceived: payment,
+        cashChange: payment - total
+      }
+
+      console.log('[Cashier] Sending order data:', orderData)
+
       const res = await fetch('/api/orders/cashier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          userName: 'Kasir - ' + user.username,
-          userPhone: user.phone || '-',
-          userAddress: '-',
-          items: cart.map((item) => ({
-            productId: item.product.id,
-            quantity: item.quantity,
-            price: getDiscountedPrice(item.product),
-            subtotal: item.subtotal
-          })),
-          total: total,
-          paymentMethod: 'cash',
-          cashReceived: payment,
-          cashChange: payment - total
-        })
+        body: JSON.stringify(orderData)
       })
+
+      console.log('[Cashier] Response status:', res.status)
 
       if (res.ok) {
         const data = await res.json()
+        console.log('[Cashier] Order created successfully:', data.order.id)
 
         toast.success('Pesanan Berhasil!', {
           description: `Kembalian: Rp ${(payment - total).toLocaleString('id-ID')}`,
@@ -276,14 +285,16 @@ export default function KasirPage() {
         fetchProducts()
       } else {
         const errorData = await res.json()
+        console.error('[Cashier] Order failed:', errorData)
         toast.error('Gagal Memproses Pesanan', {
           description: errorData.error || 'Terjadi kesalahan',
           position: 'top-center'
         })
       }
     } catch (error) {
+      console.error('[Cashier] Exception:', error)
       toast.error('Terjadi Kesalahan', {
-        description: 'Silakan coba lagi',
+        description: error instanceof Error ? error.message : 'Silakan coba lagi',
         position: 'top-center'
       })
     } finally {
