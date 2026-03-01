@@ -173,6 +173,14 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
   // Export to Excel (XLSX)
   const exportToExcel = async (filteredOrders: Order[]) => {
     try {
+      // Calculate summary inside the function
+      const summary = {
+        totalOrders: filteredOrders.length,
+        totalSales: filteredOrders.reduce((sum, order) => sum + order.total, 0),
+        completedOrders: filteredOrders.filter(o => o.status === 'completed').length,
+        pendingOrders: filteredOrders.filter(o => o.status === 'pending').length,
+      }
+
       // Dynamically import xlsx
       const XLSX = await import('xlsx')
 
@@ -192,9 +200,6 @@ export default function ExportReportDialog({ open, onOpenChange, orders }: Expor
           'Item Pesanan': items
         }
       })
-
-      // Get summary
-      const summary = getSummary()
 
       // Create workbook
       const wb = XLSX.utils.book_new()

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Label } from '@/components/ui/label'
 import ImageUpload from '@/components/ImageUpload'
 import ExportReportDialog from '@/components/ExportReportDialog'
 import {
