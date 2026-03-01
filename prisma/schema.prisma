@@ -19,7 +19,7 @@ model User {
   phone        String
   address      String?
   dateOfBirth  String?
-  role         String        @default("user") // "user" or "admin"
+  role         String        @default("user") // "user", "cashier", or "admin"
   points       Int           @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -73,6 +73,10 @@ model Order {
   total           Int
   status          String      @default("pending") // "pending", "approved", "processing", "completed", "cancelled"
   whatsappMessage String?
+  paymentMethod   String?     @default("cash") // "cash", "card", "transfer"
+  cashReceived    Int         @default(0)
+  cashChange      Int         @default(0)
+  isCashierOrder  Boolean     @default(false)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
