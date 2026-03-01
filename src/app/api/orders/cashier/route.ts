@@ -70,9 +70,11 @@ export async function POST(request: NextRequest) {
 
     console.log('[Cashier Order] Stock validation passed, creating order...')
 
+    let createdOrder: any = null
+
     try {
       // Create order and update stock in transaction
-      const order = await db.$transaction(async (tx) => {
+      createdOrder = await db.$transaction(async (tx) => {
         console.log('[Cashier Order] Transaction started')
 
         // Validate tx has required models
@@ -191,7 +193,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      order,
+      order: createdOrder,
       message: 'Pesanan berhasil dibuat'
     })
   } catch (error) {
