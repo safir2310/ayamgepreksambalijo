@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
-import { ChefHat, User, ShieldCheck, ArrowLeft, Lock } from 'lucide-react'
+import { ChefHat, User, ShieldCheck, ArrowLeft, Lock, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const [role, setRole] = useState<'user' | 'admin'>('user')
+  const [role, setRole] = useState<'user' | 'admin' | 'cashier'>('user')
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -47,6 +47,8 @@ export default function LoginPage() {
         setTimeout(() => {
           if (data.user.role === 'admin') {
             window.location.href = '/admin'
+          } else if (data.user.role === 'cashier') {
+            window.location.href = '/kasir'
           } else {
             window.location.href = '/dashboard'
           }
@@ -116,29 +118,42 @@ export default function LoginPage() {
             <Card className="border-2 border-orange-100 shadow-xl bg-white/95 backdrop-blur-sm">
               <CardContent className="p-8">
                 {/* Role Toggle */}
-                <div className="flex bg-orange-50 rounded-lg p-1 mb-6">
-                  <button
-                    onClick={() => setRole('user')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md transition-all duration-300 ${
-                      role === 'user'
-                        ? 'bg-white text-orange-600 shadow-md'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="font-medium">User</span>
-                  </button>
-                  <button
-                    onClick={() => setRole('admin')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md transition-all duration-300 ${
-                      role === 'admin'
-                        ? 'bg-white text-orange-600 shadow-md'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    <span className="font-medium">Admin</span>
-                  </button>
+                <div className="bg-orange-50 rounded-lg p-1 mb-6">
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      onClick={() => setRole('user')}
+                      className={`flex items-center justify-center gap-2 py-2.5 px-2 rounded-md transition-all duration-300 ${
+                        role === 'user'
+                          ? 'bg-white text-orange-600 shadow-md'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="font-medium text-xs">User</span>
+                    </button>
+                    <button
+                      onClick={() => setRole('cashier')}
+                      className={`flex items-center justify-center gap-2 py-2.5 px-2 rounded-md transition-all duration-300 ${
+                        role === 'cashier'
+                          ? 'bg-white text-orange-600 shadow-md'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span className="font-medium text-xs">Kasir</span>
+                    </button>
+                    <button
+                      onClick={() => setRole('admin')}
+                      className={`flex items-center justify-center gap-2 py-2.5 px-2 rounded-md transition-all duration-300 ${
+                        role === 'admin'
+                          ? 'bg-white text-orange-600 shadow-md'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span className="font-medium text-xs">Admin</span>
+                    </button>
+                  </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
