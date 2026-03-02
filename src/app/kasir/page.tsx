@@ -1428,7 +1428,7 @@ Laporan ini dicetak pada: ${date}
                           Cetak Laporan
                         </Button>
                         <Button
-                          className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                          className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
                           onClick={handleCloseCashier}
                           disabled={processingOrder}
                         >
@@ -1440,7 +1440,7 @@ Laporan ini dicetak pada: ${date}
                           ) : (
                             <>
                               <CheckCircle className="w-4 h-4 mr-2" />
-                              Tutup Shift & Logout
+                              Tutup Kasir
                             </>
                           )}
                         </Button>
