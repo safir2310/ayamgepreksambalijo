@@ -33,8 +33,6 @@ import {
   TrendingUp,
   Wallet,
   Receipt,
-  QrCode,
-  Smartphone,
   UtensilsCrossed,
   PackageOpen,
   Truck
@@ -154,7 +152,7 @@ export default function KasirPage() {
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentReceived, setPaymentReceived] = useState<number>(0)
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'transfer' | 'qris' | 'ewallet'>('cash')
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash')
 
   // Online orders state
   const [onlineOrderCount, setOnlineOrderCount] = useState(0)
@@ -488,8 +486,6 @@ export default function KasirPage() {
       case 'cash': return 'Tunai'
       case 'card': return 'Kartu'
       case 'transfer': return 'Transfer'
-      case 'qris': return 'QRIS'
-      case 'ewallet': return 'E-Wallet'
       default: return method
     }
   }
@@ -1253,7 +1249,7 @@ Laporan ini dicetak pada: ${date}
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Metode Pembayaran</label>
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <Button
                         variant={selectedPaymentMethod === 'cash' ? 'default' : 'outline'}
                         onClick={() => setSelectedPaymentMethod('cash')}
@@ -1277,22 +1273,6 @@ Laporan ini dicetak pada: ${date}
                       >
                         <Wallet className="w-4 h-4 mr-1" />
                         Transfer
-                      </Button>
-                      <Button
-                        variant={selectedPaymentMethod === 'qris' ? 'default' : 'outline'}
-                        onClick={() => setSelectedPaymentMethod('qris')}
-                        className={selectedPaymentMethod === 'qris' ? 'bg-orange-500' : 'border-orange-200'}
-                      >
-                        <QrCode className="w-4 h-4 mr-1" />
-                        QRIS
-                      </Button>
-                      <Button
-                        variant={selectedPaymentMethod === 'ewallet' ? 'default' : 'outline'}
-                        onClick={() => setSelectedPaymentMethod('ewallet')}
-                        className={selectedPaymentMethod === 'ewallet' ? 'bg-orange-500' : 'border-orange-200'}
-                      >
-                        <Smartphone className="w-4 h-4 mr-1" />
-                        E-Wallet
                       </Button>
                     </div>
                   </div>
@@ -1374,46 +1354,6 @@ Laporan ini dicetak pada: ${date}
                       <div className="mt-2 pt-2 border-t border-teal-200">
                         <p className="text-xs text-teal-600">Total:</p>
                         <p className="text-lg font-bold text-teal-800">
-                          Rp {getCartTotal().toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedPaymentMethod === 'qris' && (
-                    <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-                      <div className="flex items-center gap-2">
-                        <QrCode className="w-10 h-10 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-900">Scan QRIS</p>
-                          <p className="text-xs text-blue-700 mt-1">
-                            Scan kode QR
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-blue-200">
-                        <p className="text-xs text-blue-600">Total:</p>
-                        <p className="text-lg font-bold text-blue-800">
-                          Rp {getCartTotal().toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedPaymentMethod === 'ewallet' && (
-                    <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
-                      <div className="flex items-center gap-2">
-                        <Smartphone className="w-10 h-10 text-purple-600" />
-                        <div>
-                          <p className="text-sm font-medium text-purple-900">E-Wallet</p>
-                          <p className="text-xs text-purple-700 mt-1">
-                            Pilih aplikasi e-wallet
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-purple-200">
-                        <p className="text-xs text-purple-600">Total:</p>
-                        <p className="text-lg font-bold text-purple-800">
                           Rp {getCartTotal().toLocaleString('id-ID')}
                         </p>
                       </div>
