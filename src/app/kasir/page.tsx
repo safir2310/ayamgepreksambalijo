@@ -32,7 +32,9 @@ import {
   FileText,
   TrendingUp,
   Wallet,
-  Receipt
+  Receipt,
+  QrCode,
+  Smartphone
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -149,7 +151,7 @@ export default function KasirPage() {
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentReceived, setPaymentReceived] = useState<number>(0)
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash')
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'transfer' | 'qris' | 'ewallet'>('cash')
 
   // Online orders state
   const [onlineOrderCount, setOnlineOrderCount] = useState(0)
@@ -475,6 +477,17 @@ export default function KasirPage() {
     }
   }
 
+  const getPaymentMethodName = (method: string): string => {
+    switch (method) {
+      case 'cash': return 'Tunai'
+      case 'card': return 'Kartu'
+      case 'transfer': return 'Transfer'
+      case 'qris': return 'QRIS'
+      case 'ewallet': return 'E-Wallet'
+      default: return method
+    }
+  }
+
   const printReceipt = (order: Order, paymentMethod: string, change: number, pointsEarned: number) => {
     const orderId = order.id.slice(-6).toUpperCase()
     const date = new Date(order.createdAt).toLocaleString('id-ID', {
@@ -503,7 +516,7 @@ ITEM:
 
     receipt += `-----------------------------------\n`
     receipt += `TOTAL: Rp ${order.total.toLocaleString('id-ID')}\n\n`
-    receipt += `Metode Pembayaran: ${paymentMethod === 'cash' ? 'Tunai' : paymentMethod === 'card' ? 'Kartu' : 'Transfer'}\n`
+    receipt += `Metode Pembayaran: ${getPaymentMethodName(paymentMethod)}\n`
 
     if (paymentMethod === 'cash') {
       receipt += `Uang Diterima: Rp ${order.cashReceived?.toLocaleString('id-ID') || 0}\n`
@@ -600,7 +613,7 @@ METODE PEMBAYARAN
 `
 
     Object.entries(closingData.paymentMethods).forEach(([method, amount]) => {
-      const methodName = method === 'cash' ? 'Tunai' : method === 'card' ? 'Kartu' : 'Transfer'
+      const methodName = getPaymentMethodName(method)
       report += `${methodName}: Rp ${amount.toLocaleString('id-ID')}\n`
     })
 
@@ -1086,7 +1099,7 @@ Laporan ini dicetak pada: ${date}
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Metode Pembayaran</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                       <Button
                         variant={selectedPaymentMethod === 'cash' ? 'default' : 'outline'}
                         onClick={() => setSelectedPaymentMethod('cash')}
@@ -1111,6 +1124,22 @@ Laporan ini dicetak pada: ${date}
                         <Wallet className="w-4 h-4 mr-1" />
                         Transfer
                       </Button>
+                      <Button
+                        variant={selectedPaymentMethod === 'qris' ? 'default' : 'outline'}
+                        onClick={() => setSelectedPaymentMethod('qris')}
+                        className={selectedPaymentMethod === 'qris' ? 'bg-orange-500' : 'border-orange-200'}
+                      >
+                        <QrCode className="w-4 h-4 mr-1" />
+                        QRIS
+                      </Button>
+                      <Button
+                        variant={selectedPaymentMethod === 'ewallet' ? 'default' : 'outline'}
+                        onClick={() => setSelectedPaymentMethod('ewallet')}
+                        className={selectedPaymentMethod === 'ewallet' ? 'bg-orange-500' : 'border-orange-200'}
+                      >
+                        <Smartphone className="w-4 h-4 mr-1" />
+                        E-Wallet
+                      </Button>
                     </div>
                   </div>
 
@@ -1132,6 +1161,86 @@ Laporan ini dicetak pada: ${date}
                           </p>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === 'card' && (
+                    <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-12 h-12 text-amber-600" />
+                        <div>
+                          <p className="text-sm font-medium text-amber-900">Pembayaran Kartu</p>
+                          <p className="text-xs text-amber-700 mt-1">
+                            Masukkan kartu debit atau kredit pada mesin EDC
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-amber-200">
+                        <p className="text-xs text-amber-600">Total Pembayaran:</p>
+                        <p className="text-xl font-bold text-amber-800">
+                          Rp {getCartTotal().toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === 'transfer' && (
+                    <div className="bg-teal-50 p-4 rounded-lg border-2 border-teal-200">
+                      <div className="flex items-center gap-3">
+                        <Wallet className="w-12 h-12 text-teal-600" />
+                        <div>
+                          <p className="text-sm font-medium text-teal-900">Transfer Bank</p>
+                          <p className="text-xs text-teal-700 mt-1">
+                            Konfirmasi pembayaran transfer melalui bank
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-teal-200">
+                        <p className="text-xs text-teal-600">Total Pembayaran:</p>
+                        <p className="text-xl font-bold text-teal-800">
+                          Rp {getCartTotal().toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === 'qris' && (
+                    <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <QrCode className="w-12 h-12 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-blue-900">Scan QRIS</p>
+                          <p className="text-xs text-blue-700 mt-1">
+                            Pindai kode QR menggunakan aplikasi e-wallet atau mobile banking Anda
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <p className="text-xs text-blue-600">Total Pembayaran:</p>
+                        <p className="text-xl font-bold text-blue-800">
+                          Rp {getCartTotal().toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === 'ewallet' && (
+                    <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
+                      <div className="flex items-center gap-3">
+                        <Smartphone className="w-12 h-12 text-purple-600" />
+                        <div>
+                          <p className="text-sm font-medium text-purple-900">E-Wallet</p>
+                          <p className="text-xs text-purple-700 mt-1">
+                            Pilih aplikasi e-wallet yang digunakan pelanggan
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-purple-200">
+                        <p className="text-xs text-purple-600">Total Pembayaran:</p>
+                        <p className="text-xl font-bold text-purple-800">
+                          Rp {getCartTotal().toLocaleString('id-ID')}
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -1382,12 +1491,12 @@ Laporan ini dicetak pada: ${date}
                           <Wallet className="w-4 h-4" />
                           Metode Pembayaran
                         </h3>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                           {Object.entries(closingData.paymentMethods).map(([method, amount]) => (
                             <Card key={method} className="border-orange-100">
                               <CardContent className="p-3 text-center">
                                 <p className="text-xs text-gray-600 mb-1">
-                                  {method === 'cash' ? 'Tunai' : method === 'card' ? 'Kartu' : 'Transfer'}
+                                  {getPaymentMethodName(method)}
                                 </p>
                                 <p className="text-sm font-bold text-orange-600">
                                   Rp {amount.toLocaleString('id-ID')}
