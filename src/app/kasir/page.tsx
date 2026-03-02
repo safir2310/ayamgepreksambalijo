@@ -838,11 +838,11 @@ Laporan ini dicetak pada: ${date}
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-6 flex gap-6 min-h-[calc(100vh-240px)]">
+      <main className="container mx-auto px-4 py-6 relative min-h-[calc(100vh-240px)]">
         {/* Product Grid */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="pr-[360px]">
           {/* Search and Filter */}
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap mb-6">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
@@ -949,34 +949,34 @@ Laporan ini dicetak pada: ${date}
           )}
         </div>
 
-        {/* Shopping Cart Sidebar */}
+        {/* Shopping Cart - Fixed on Right Side */}
         <motion.div
           initial={{ x: 300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="w-[480px] flex flex-col gap-4 min-h-[calc(100vh-240px)]"
+          className="fixed right-4 top-[180px] bottom-[100px] w-[340px] flex flex-col gap-4 z-30"
         >
-          <Card className="border-orange-100 shadow-lg h-full flex flex-col">
-            <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white flex-shrink-0">
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
+          <Card className="border-orange-100 shadow-lg flex flex-col h-full max-h-[calc(100vh-280px)]">
+            <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white flex-shrink-0 py-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ShoppingCart className="w-4 h-4" />
                 Keranjang
                 {cart.length > 0 && (
-                  <Badge variant="secondary" className="ml-auto">
+                  <Badge variant="secondary" className="ml-auto text-xs">
                     {cart.length}
                   </Badge>
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+            <CardContent className="p-3 flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 overflow-y-auto pr-2">
                 {cart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400 min-h-[400px]">
-                    <ShoppingBag className="w-12 h-12 mb-2" />
-                    <p className="text-sm">Keranjang kosong</p>
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 min-h-[200px]">
+                    <ShoppingBag className="w-10 h-10 mb-2" />
+                    <p className="text-xs">Keranjang kosong</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 pb-4">
+                  <div className="space-y-2 pb-2">
                     {cart.map((item) => (
                       <motion.div
                         key={item.product.id}
@@ -984,45 +984,45 @@ Laporan ini dicetak pada: ${date}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="flex gap-3 p-3 bg-orange-50 rounded-lg"
+                        className="flex gap-2 p-2 bg-orange-50 rounded-lg"
                       >
                         {item.product.image && (
                           <img
                             src={item.product.image}
                             alt={item.product.name}
-                            className="w-20 h-20 object-cover rounded-md flex-shrink-0"
+                            className="w-14 h-14 object-cover rounded-md flex-shrink-0"
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-base text-gray-800 line-clamp-1">{item.product.name}</h4>
-                          <p className="text-sm text-orange-600 font-bold mt-1">
+                          <h4 className="font-medium text-xs text-gray-800 line-clamp-1">{item.product.name}</h4>
+                          <p className="text-xs text-orange-600 font-bold mt-0.5">
                             Rp {item.subtotal.toLocaleString('id-ID')}
                           </p>
-                          <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center gap-1 mt-1">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-8 w-8 p-0 border-orange-200"
+                              className="h-6 w-6 p-0 border-orange-200"
                               onClick={() => updateQuantity(item.product.id, -1)}
                             >
-                              <Minus className="w-4 h-4" />
+                              <Minus className="w-3 h-3" />
                             </Button>
-                            <span className="text-base font-medium w-10 text-center">{item.quantity}</span>
+                            <span className="text-xs font-medium w-8 text-center">{item.quantity}</span>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-8 w-8 p-0 border-orange-200"
+                              className="h-6 w-6 p-0 border-orange-200"
                               onClick={() => updateQuantity(item.product.id, 1)}
                             >
-                              <Plus className="w-4 h-4" />
+                              <Plus className="w-3 h-3" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
                               onClick={() => removeFromCart(item.product.id)}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
                         </div>
@@ -1032,21 +1032,21 @@ Laporan ini dicetak pada: ${date}
                 )}
               </div>
 
-              <Separator className="my-4 flex-shrink-0" />
+              <Separator className="my-3 flex-shrink-0" />
 
-              <div className="space-y-2 flex-shrink-0">
-                <div className="flex justify-between items-center text-sm">
+              <div className="space-y-1.5 flex-shrink-0">
+                <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">Rp {getCartTotal().toLocaleString('id-ID')}</span>
+                  <span className="font-medium text-sm">Rp {getCartTotal().toLocaleString('id-ID')}</span>
                 </div>
-                <div className="flex justify-between items-center text-lg font-bold">
+                <div className="flex justify-between items-center text-sm font-bold">
                   <span className="text-gray-800">Total</span>
-                  <span className="text-orange-600">Rp {getCartTotal().toLocaleString('id-ID')}</span>
+                  <span className="text-orange-600 text-base">Rp {getCartTotal().toLocaleString('id-ID')}</span>
                 </div>
               </div>
 
               <Button
-                className="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-base py-6 flex-shrink-0"
+                className="w-full mt-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-sm py-3 flex-shrink-0"
                 disabled={cart.length === 0 || processingOrder}
                 onClick={() => setShowPaymentModal(true)}
               >
@@ -1057,7 +1057,7 @@ Laporan ini dicetak pada: ${date}
                   </>
                 ) : (
                   <>
-                    <CreditCard className="w-5 h-5 mr-2" />
+                    <CreditCard className="w-4 h-4 mr-2" />
                     Bayar
                   </>
                 )}
