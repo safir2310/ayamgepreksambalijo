@@ -34,7 +34,10 @@ import {
   Wallet,
   Receipt,
   QrCode,
-  Smartphone
+  Smartphone,
+  UtensilsCrossed,
+  PackageOpen,
+  Truck
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -178,6 +181,9 @@ export default function KasirPage() {
 
   // Clock state
   const [currentTime, setCurrentTime] = useState(new Date())
+
+  // Order type state
+  const [orderType, setOrderType] = useState<'dine-in' | 'take-away' | 'delivery'>('dine-in')
 
   // Check authentication and role
   useEffect(() => {
@@ -495,6 +501,12 @@ export default function KasirPage() {
       timeStyle: 'short'
     })
 
+    const orderTypeText = {
+      'dine-in': 'Makan di Tempat',
+      'take-away': 'Bawa Pulang',
+      'delivery': 'Pesanan Antar'
+    }
+
     let receipt = `
 ╔══════════════════════════════════════╗
 ║     AYAM GEPREK SAMBAL IJO          ║
@@ -504,6 +516,7 @@ export default function KasirPage() {
 No. Pesanan: ${orderId}
 Tanggal: ${date}
 Kasir: ${user?.username || '-'}
+Tipe: ${orderTypeText[orderType]}
 
 -----------------------------------
 ITEM:
@@ -801,6 +814,130 @@ Laporan ini dicetak pada: ${date}
         </div>
       </header>
 
+      {/* Hero Section - Order Type Selection */}
+      <section className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 py-6 shadow-lg">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Dine-in Hero */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setOrderType('dine-in')}
+              className={`relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 ${
+                orderType === 'dine-in'
+                  ? 'bg-white text-orange-600 shadow-2xl ring-4 ring-orange-300'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              <div className="p-6 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className={`p-4 rounded-xl ${
+                    orderType === 'dine-in' ? 'bg-orange-100' : 'bg-white/20'
+                  }`}>
+                    <UtensilsCrossed className={`w-10 h-10 ${
+                      orderType === 'dine-in' ? 'text-orange-600' : 'text-white'
+                    }`} />
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${
+                      orderType === 'dine-in' ? 'text-gray-900' : 'text-white'
+                    }`}>
+                      Dine-In
+                    </h3>
+                    <p className={`text-sm mt-1 ${
+                      orderType === 'dine-in' ? 'text-gray-600' : 'text-white/90'
+                    }`}>
+                      Makan di Tempat
+                    </p>
+                  </div>
+                </div>
+                {orderType === 'dine-in' && (
+                  <CheckCircle className="absolute top-4 right-4 w-6 h-6 text-orange-600" />
+                )}
+              </div>
+            </motion.div>
+
+            {/* Take-away Hero */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setOrderType('take-away')}
+              className={`relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 ${
+                orderType === 'take-away'
+                  ? 'bg-white text-orange-600 shadow-2xl ring-4 ring-orange-300'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              <div className="p-6 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className={`p-4 rounded-xl ${
+                    orderType === 'take-away' ? 'bg-orange-100' : 'bg-white/20'
+                  }`}>
+                    <PackageOpen className={`w-10 h-10 ${
+                      orderType === 'take-away' ? 'text-orange-600' : 'text-white'
+                    }`} />
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${
+                      orderType === 'take-away' ? 'text-gray-900' : 'text-white'
+                    }`}>
+                      Take-Away
+                    </h3>
+                    <p className={`text-sm mt-1 ${
+                      orderType === 'take-away' ? 'text-gray-600' : 'text-white/90'
+                    }`}>
+                      Bawa Pulang
+                    </p>
+                  </div>
+                </div>
+                {orderType === 'take-away' && (
+                  <CheckCircle className="absolute top-4 right-4 w-6 h-6 text-orange-600" />
+                )}
+              </div>
+            </motion.div>
+
+            {/* Delivery Hero */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setOrderType('delivery')}
+              className={`relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 ${
+                orderType === 'delivery'
+                  ? 'bg-white text-orange-600 shadow-2xl ring-4 ring-orange-300'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              <div className="p-6 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className={`p-4 rounded-xl ${
+                    orderType === 'delivery' ? 'bg-orange-100' : 'bg-white/20'
+                  }`}>
+                    <Truck className={`w-10 h-10 ${
+                      orderType === 'delivery' ? 'text-orange-600' : 'text-white'
+                    }`} />
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${
+                      orderType === 'delivery' ? 'text-gray-900' : 'text-white'
+                    }`}>
+                      Delivery
+                    </h3>
+                    <p className={`text-sm mt-1 ${
+                      orderType === 'delivery' ? 'text-gray-600' : 'text-white/90'
+                    }`}>
+                      Pesanan Antar
+                    </p>
+                  </div>
+                </div>
+                {orderType === 'delivery' && (
+                  <CheckCircle className="absolute top-4 right-4 w-6 h-6 text-orange-600" />
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-6 flex gap-6">
         {/* Product Grid */}
@@ -933,6 +1070,23 @@ Laporan ini dicetak pada: ${date}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
+              {/* Order Type Badge */}
+              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-2">
+                  {orderType === 'dine-in' && <UtensilsCrossed className="w-5 h-5 text-orange-600" />}
+                  {orderType === 'take-away' && <PackageOpen className="w-5 h-5 text-orange-600" />}
+                  {orderType === 'delivery' && <Truck className="w-5 h-5 text-orange-600" />}
+                  <div className="flex-1">
+                    <p className="text-xs text-orange-700 font-medium uppercase tracking-wide">Tipe Pesanan</p>
+                    <p className="text-sm font-bold text-orange-800">
+                      {orderType === 'dine-in' && 'Dine-In (Makan di Tempat)'}
+                      {orderType === 'take-away' && 'Take-Away (Bawa Pulang)'}
+                      {orderType === 'delivery' && 'Delivery (Pesanan Antar)'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <ScrollArea className="h-64 pr-4">
                 {cart.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-400">
