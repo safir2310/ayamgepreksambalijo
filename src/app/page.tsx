@@ -61,20 +61,9 @@ interface ShopProfile {
 }
 
 export default function Home() {
-  const [user, setUser] = useState<any>(() => {
-    if (typeof window !== 'undefined') {
-      const userData = localStorage.getItem('user')
-      return userData ? JSON.parse(userData) : null
-    }
-    return null
-  })
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('cart')
-      return savedCart ? JSON.parse(savedCart) : []
-    }
-    return []
-  })
+  const [mounted, setMounted] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [cart, setCart] = useState<CartItem[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [shopProfile, setShopProfile] = useState<any>(null)
@@ -84,6 +73,22 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
   const [dialogQuantity, setDialogQuantity] = useState(1)
+
+  // Load user and cart from localStorage on client-side mount
+  useEffect(() => {
+    // Load user from localStorage
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+    // Load cart from localStorage
+    const savedCart = localStorage.getItem('cart')
+    if (savedCart) {
+      setCart(JSON.parse(savedCart))
+    }
+    // Set mounted after loading data
+    setMounted(true)
+  }, [])
 
   // WebSocket connection for real-time point updates
   useWebSocket(user?.id || null, user?.role || null, {
@@ -363,31 +368,46 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-md border-b border-orange-200">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 sm:gap-3"
-            >
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-1.5 sm:p-2 rounded-full shadow-lg">
-                {shopProfile?.logo ? (
-                  <img src={shopProfile.logo} alt="Logo" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full" />
-                ) : (
+            {mounted ? (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 sm:gap-3"
+              >
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-1.5 sm:p-2 rounded-full shadow-lg">
+                  {shopProfile?.logo ? (
+                    <img src={shopProfile.logo} alt="Logo" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full" />
+                  ) : (
+                    <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h1 className="text-sm sm:text-lg font-bold text-orange-600 leading-tight">
+                    {shopProfile?.storeName || 'AYAM GEPREK'}<br className="hidden sm:block" /> {shopProfile?.storeName?.includes('SAMBAL') ? '' : 'SAMBAL IJO'}
+                  </h1>
+                  <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{shopProfile?.slogan || 'Sambal Pedas Mantap'}</p>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-1.5 sm:p-2 rounded-full shadow-lg">
                   <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                )}
+                </div>
+                <div>
+                  <h1 className="text-sm sm:text-lg font-bold text-orange-600 leading-tight">
+                    AYAM GEPREK<br className="hidden sm:block" /> SAMBAL IJO
+                  </h1>
+                  <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Sambal Pedas Mantap</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-sm sm:text-lg font-bold text-orange-600 leading-tight">
-                  {shopProfile?.storeName || 'AYAM GEPREK'}<br className="hidden sm:block" /> {shopProfile?.storeName?.includes('SAMBAL') ? '' : 'SAMBAL IJO'}
-                </h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{shopProfile?.slogan || 'Sambal Pedas Mantap'}</p>
-              </div>
-            </motion.div>
+            )}
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2"
-            >
+            {mounted ? (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2"
+              >
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
                   <Button
@@ -544,15 +564,39 @@ export default function Home() {
                 }}
               >
                 <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 text-orange-600" />
-                <span className="hidden sm:inline">{user ? user.username : 'Login'}</span>
+                <span className="hidden sm:inline" suppressHydrationWarning={true}>
+                  {mounted && user ? user.username : 'Login'}
+                </span>
                 <span className="sm:hidden">Akun</span>
               </Button>
             </motion.div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="relative bg-orange-50 border-orange-200 w-9 h-9 sm:w-10 sm:h-10"
+                >
+                  <ShoppingCart className="w-4 h-4 text-orange-600" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-orange-50 border-orange-200 text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-2 h-8 sm:h-9"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 text-orange-600" />
+                  <span className="hidden sm:inline">Login</span>
+                  <span className="sm:hidden">Akun</span>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
+      {mounted ? (
       <section className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-orange-300 text-white py-8 sm:py-12 md:py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:20px_20px]"></div>
         <div className="container mx-auto px-3 sm:px-4 relative z-10">
@@ -623,6 +667,46 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+      ) : (
+      <section className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-orange-300 text-white py-8 sm:py-12 md:py-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(white_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+        <div className="container mx-auto px-3 sm:px-4 relative z-10">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center justify-center mb-4 sm:mb-6">
+              <div className="bg-white/20 backdrop-blur-sm border-2 border-white/50 rounded-full px-4 py-2 flex items-center gap-2">
+                <div className="text-green-400">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L13.09 8.26L19 7L14.74 11.26L17 17L12 14.5L7 17L9.26 11.26L5 7L10.91 8.26L12 2Z" />
+                  </svg>
+                </div>
+                <span className="text-white font-bold text-base sm:text-xl tracking-wider">
+                  HALAL
+                </span>
+                <span className="text-white/80 text-[10px] sm:text-xs font-medium">
+                  100% Halal
+                </span>
+              </div>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold mb-2 sm:mb-3 leading-tight">
+              Nikmati Kelezatan<br className="sm:hidden" />
+              <span className="block sm:inline"> Ayam Geprek </span>
+              <span className="text-yellow-200">Sambal Ijo</span>
+            </h2>
+            <p className="text-sm sm:text-base md:text-xl opacity-90 mb-4 sm:mb-6 leading-relaxed px-2">
+              Sambal pedas mantap dengan cita rasa otentik. Pesan sekarang dan nikmati kelezatannya!
+            </p>
+            <Button
+              size="lg"
+              className="bg-white text-orange-600 hover:bg-orange-50 font-semibold px-4 sm:px-6 py-3 sm:py-5 text-xs sm:text-base shadow-xl hover:shadow-2xl transition-all"
+              onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+              Pesan Sekarang
+            </Button>
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* Categories */}
       <section className="py-3 sm:py-4 bg-white sticky top-14 sm:top-16 z-40 border-b border-orange-100 shadow-sm">
@@ -660,6 +744,7 @@ export default function Home() {
       </section>
 
       {/* Products Grid */}
+      {mounted ? (
       <section id="products" className="py-6 sm:py-8 flex-1">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
@@ -743,6 +828,79 @@ export default function Home() {
             </AnimatePresence>
           </div>
 
+        </div>
+      </section>
+      ) : (
+      <section id="products" className="py-6 sm:py-8 flex-1">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+            {filteredProducts.map((product, index) => (
+              <Card key={product.id} className="overflow-hidden border border-orange-100 hover:border-orange-300 transition-all duration-300 shadow-sm hover:shadow-lg bg-white">
+                <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden">
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-orange-300" />
+                    </div>
+                  )}
+                  {product.isPromotion && (
+                    <Badge className="absolute top-1 sm:top-1 left-1 sm:left-1 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5">
+                      PROMO
+                    </Badge>
+                  )}
+                  {product.isNew && (
+                    <Badge className="absolute top-1 sm:top-1 right-1 sm:right-1 bg-green-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5">
+                      BARU
+                    </Badge>
+                  )}
+                  {product.discount > 0 && (
+                    <Badge className="absolute bottom-1 left-1 sm:left-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5">
+                      -{product.discount}%
+                    </Badge>
+                  )}
+                </div>
+                <CardContent className="p-1.5 sm:p-2">
+                  <h3 className="font-semibold text-[10px] sm:text-xs text-gray-800 mb-1 line-clamp-2 leading-tight min-h-[2.2rem] sm:min-h-[1.2rem]">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex-1 min-w-0">
+                      {product.discount > 0 ? (
+                        <div>
+                          <p className="text-[9px] sm:text-[10px] text-gray-400 line-through">
+                            Rp {product.price.toLocaleString('id-ID')}
+                          </p>
+                          <p className="text-xs sm:text-sm font-bold text-orange-600 leading-tight truncate">
+                            Rp {getDiscountedPrice(product).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-xs sm:text-sm font-bold text-orange-600 leading-tight truncate">
+                          Rp {product.price.toLocaleString('id-ID')}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="icon"
+                      className="bg-orange-500 hover:bg-orange-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 p-0 flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        addToCart(product)
+                      }}
+                    >
+                      <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
           {filteredProducts.length === 0 && (
             <div className="text-center py-20 text-gray-500">
               <ChefHat className="w-16 h-16 mx-auto mb-4 text-gray-300" />
@@ -751,6 +909,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      )}
 
       {/* Product Detail Dialog */}
       <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
