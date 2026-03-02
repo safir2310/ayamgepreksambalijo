@@ -1070,13 +1070,13 @@ Laporan ini dicetak pada: ${date}
               onClick={(e) => e.stopPropagation()}
             >
               <Card>
-                <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                  <CardTitle className="flex items-center justify-between">
+                <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3">
+                  <CardTitle className="flex items-center justify-between text-lg">
                     <span>Pembayaran</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:bg-white/20"
+                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
                       onClick={() => !processingOrder && setShowPaymentModal(false)}
                       disabled={processingOrder}
                     >
@@ -1084,80 +1084,73 @@ Laporan ini dicetak pada: ${date}
                     </Button>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3">
-                  <div className="text-center py-2">
-                    <p className="text-gray-600 mb-1 text-sm">Total Pembayaran</p>
-                    <p className="text-2xl font-bold text-orange-600">
+                <CardContent className="p-3 space-y-3">
+                  <div className="text-center py-1">
+                    <p className="text-gray-600 text-xs mb-1">Total</p>
+                    <p className="text-xl font-bold text-orange-600">
                       Rp {getCartTotal().toLocaleString('id-ID')}
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Metode Pembayaran</label>
-                    <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-700">Metode</label>
+                    <div className="grid grid-cols-3 gap-1">
                       <Button
                         variant={selectedPaymentMethod === 'cash' ? 'default' : 'outline'}
                         onClick={() => setSelectedPaymentMethod('cash')}
-                        className={selectedPaymentMethod === 'cash' ? 'bg-orange-500' : 'border-orange-200'}
+                        className={selectedPaymentMethod === 'cash' ? 'bg-orange-500 text-xs py-2' : 'border-orange-200 text-xs py-2'}
                       >
-                        <DollarSign className="w-4 h-4 mr-1" />
+                        <DollarSign className="w-3 h-3 mr-1" />
                         Tunai
                       </Button>
                       <Button
                         variant={selectedPaymentMethod === 'card' ? 'default' : 'outline'}
                         onClick={() => setSelectedPaymentMethod('card')}
-                        className={selectedPaymentMethod === 'card' ? 'bg-orange-500' : 'border-orange-200'}
+                        className={selectedPaymentMethod === 'card' ? 'bg-orange-500 text-xs py-2' : 'border-orange-200 text-xs py-2'}
                       >
-                        <CreditCard className="w-4 h-4 mr-1" />
+                        <CreditCard className="w-3 h-3 mr-1" />
                         Kartu
                       </Button>
                       <Button
                         variant={selectedPaymentMethod === 'transfer' ? 'default' : 'outline'}
                         onClick={() => setSelectedPaymentMethod('transfer')}
-                        className={selectedPaymentMethod === 'transfer' ? 'bg-orange-500' : 'border-orange-200'}
+                        className={selectedPaymentMethod === 'transfer' ? 'bg-orange-500 text-xs py-2' : 'border-orange-200 text-xs py-2'}
                       >
-                        <Wallet className="w-4 h-4 mr-1" />
+                        <Wallet className="w-3 h-3 mr-1" />
                         Transfer
                       </Button>
                     </div>
                   </div>
 
                   {selectedPaymentMethod === 'cash' && (
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium text-gray-700">Uang Diterima</label>
+                    <div className="space-y-2">
                       <Input
                         type="number"
                         value={paymentReceived || ''}
                         onChange={(e) => setPaymentReceived(Number(e.target.value) || 0)}
-                        placeholder="Masukkan jumlah uang"
-                        className="border-orange-200 focus-visible:ring-orange-500"
+                        placeholder="Uang diterima"
+                        className="border-orange-200 focus-visible:ring-orange-500 text-sm h-9"
                       />
 
-                      {/* Quick Cash Buttons */}
-                      <div className="space-y-2">
-                        <p className="text-xs text-gray-500 font-medium">Nominal Cepat:</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[5000, 10000, 20000, 50000, 100000, 200000].map((amount) => (
-                            <Button
-                              key={amount}
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setPaymentReceived(paymentReceived + amount)}
-                              className="text-xs border-orange-200 hover:bg-orange-50 hover:border-orange-400"
-                            >
-                              {amount >= 1000
-                                ? `${(amount / 1000)}K`
-                                : amount.toLocaleString('id-ID')}
-                            </Button>
-                          ))}
-                        </div>
+                      <div className="grid grid-cols-3 gap-1">
+                        {[10000, 20000, 50000, 100000].map((amount) => (
+                          <Button
+                            key={amount}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPaymentReceived(amount)}
+                            className="text-xs border-orange-200 hover:bg-orange-50 h-8"
+                          >
+                            {(amount / 1000)}K
+                          </Button>
+                        ))}
                       </div>
 
                       {paymentReceived >= getCartTotal() && (
-                        <div className="bg-green-50 p-3 rounded-lg">
-                          <p className="text-sm text-gray-600">Kembalian:</p>
-                          <p className="text-2xl font-bold text-green-600">
+                        <div className="bg-green-50 p-2 rounded text-center">
+                          <p className="text-xs text-gray-600">Kembalian:</p>
+                          <p className="text-lg font-bold text-green-600">
                             Rp {(paymentReceived - getCartTotal()).toLocaleString('id-ID')}
                           </p>
                         </div>
@@ -1166,69 +1159,25 @@ Laporan ini dicetak pada: ${date}
                   )}
 
                   {selectedPaymentMethod === 'card' && (
-                    <div className="bg-amber-50 p-3 rounded-lg border-2 border-amber-200">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="w-10 h-10 text-amber-600" />
-                        <div>
-                          <p className="text-sm font-medium text-amber-900">Pembayaran Kartu</p>
-                          <p className="text-xs text-amber-700 mt-1">
-                            Gunakan mesin EDC
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-amber-200">
-                        <p className="text-xs text-amber-600">Total:</p>
-                        <p className="text-lg font-bold text-amber-800">
-                          Rp {getCartTotal().toLocaleString('id-ID')}
-                        </p>
-                      </div>
+                    <div className="text-center py-2">
+                      <CreditCard className="w-8 h-8 text-amber-600 mx-auto mb-1" />
+                      <p className="text-sm text-gray-700">Gunakan mesin EDC</p>
                     </div>
                   )}
 
                   {selectedPaymentMethod === 'transfer' && (
-                    <div className="bg-teal-50 p-3 rounded-lg border-2 border-teal-200">
-                      <div className="flex items-center gap-2">
-                        <Wallet className="w-10 h-10 text-teal-600" />
-                        <div>
-                          <p className="text-sm font-medium text-teal-900">Transfer Bank</p>
-                          <p className="text-xs text-teal-700 mt-1">
-                            Konfirmasi transfer
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-teal-200">
-                        <p className="text-xs text-teal-600">Total:</p>
-                        <p className="text-lg font-bold text-teal-800">
-                          Rp {getCartTotal().toLocaleString('id-ID')}
-                        </p>
-                      </div>
+                    <div className="text-center py-2">
+                      <Wallet className="w-8 h-8 text-teal-600 mx-auto mb-1" />
+                      <p className="text-sm text-gray-700">Konfirmasi transfer</p>
                     </div>
                   )}
 
-                  <div className="bg-orange-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600">Poin yang akan diperoleh:</p>
-                    <p className="text-lg font-bold text-orange-600">
-                      +{Math.floor(getCartTotal() / 1000)} poin
-                    </p>
-                    <p className="text-xs text-gray-500">(1 poin per Rp 1.000)</p>
-                  </div>
-
                   <Button
-                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-sm py-2.5"
                     disabled={processingOrder || (selectedPaymentMethod === 'cash' && paymentReceived < getCartTotal())}
                     onClick={handlePayment}
                   >
-                    {processingOrder ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Proses Pembayaran
-                      </>
-                    )}
+                    {processingOrder ? 'Memproses...' : 'Bayar'}
                   </Button>
                 </CardContent>
               </Card>
