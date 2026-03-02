@@ -1055,7 +1055,7 @@ Laporan ini dicetak pada: ${date}
           initial={{ x: 300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="w-80 flex flex-col gap-4"
+          className="w-96 flex flex-col gap-4"
         >
           <Card className="border-orange-100 shadow-lg">
             <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
@@ -1087,7 +1087,7 @@ Laporan ini dicetak pada: ${date}
                 </div>
               </div>
 
-              <ScrollArea className="h-64 pr-4">
+              <ScrollArea className="h-80 pr-4">
                 {cart.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-400">
                     <ShoppingBag className="w-12 h-12 mb-2" />
@@ -1225,7 +1225,7 @@ Laporan ini dicetak pada: ${date}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-sm"
               onClick={(e) => e.stopPropagation()}
             >
               <Card>
@@ -1243,10 +1243,10 @@ Laporan ini dicetak pada: ${date}
                     </Button>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="text-center py-4">
-                    <p className="text-gray-600 mb-1">Total Pembayaran</p>
-                    <p className="text-3xl font-bold text-orange-600">
+                <CardContent className="p-4 space-y-3">
+                  <div className="text-center py-2">
+                    <p className="text-gray-600 mb-1 text-sm">Total Pembayaran</p>
+                    <p className="text-2xl font-bold text-orange-600">
                       Rp {getCartTotal().toLocaleString('id-ID')}
                     </p>
                   </div>
@@ -1298,7 +1298,7 @@ Laporan ini dicetak pada: ${date}
                   </div>
 
                   {selectedPaymentMethod === 'cash' && (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <label className="text-sm font-medium text-gray-700">Uang Diterima</label>
                       <Input
                         type="number"
@@ -1307,6 +1307,28 @@ Laporan ini dicetak pada: ${date}
                         placeholder="Masukkan jumlah uang"
                         className="border-orange-200 focus-visible:ring-orange-500"
                       />
+
+                      {/* Quick Cash Buttons */}
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-500 font-medium">Nominal Cepat:</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[5000, 10000, 20000, 50000, 100000, 200000].map((amount) => (
+                            <Button
+                              key={amount}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPaymentReceived(paymentReceived + amount)}
+                              className="text-xs border-orange-200 hover:bg-orange-50 hover:border-orange-400"
+                            >
+                              {amount >= 1000
+                                ? `${(amount / 1000)}K`
+                                : amount.toLocaleString('id-ID')}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
                       {paymentReceived >= getCartTotal() && (
                         <div className="bg-green-50 p-3 rounded-lg">
                           <p className="text-sm text-gray-600">Kembalian:</p>
@@ -1319,19 +1341,19 @@ Laporan ini dicetak pada: ${date}
                   )}
 
                   {selectedPaymentMethod === 'card' && (
-                    <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="w-12 h-12 text-amber-600" />
+                    <div className="bg-amber-50 p-3 rounded-lg border-2 border-amber-200">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-10 h-10 text-amber-600" />
                         <div>
                           <p className="text-sm font-medium text-amber-900">Pembayaran Kartu</p>
                           <p className="text-xs text-amber-700 mt-1">
-                            Masukkan kartu debit atau kredit pada mesin EDC
+                            Gunakan mesin EDC
                           </p>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-amber-200">
-                        <p className="text-xs text-amber-600">Total Pembayaran:</p>
-                        <p className="text-xl font-bold text-amber-800">
+                      <div className="mt-2 pt-2 border-t border-amber-200">
+                        <p className="text-xs text-amber-600">Total:</p>
+                        <p className="text-lg font-bold text-amber-800">
                           Rp {getCartTotal().toLocaleString('id-ID')}
                         </p>
                       </div>
@@ -1339,19 +1361,19 @@ Laporan ini dicetak pada: ${date}
                   )}
 
                   {selectedPaymentMethod === 'transfer' && (
-                    <div className="bg-teal-50 p-4 rounded-lg border-2 border-teal-200">
-                      <div className="flex items-center gap-3">
-                        <Wallet className="w-12 h-12 text-teal-600" />
+                    <div className="bg-teal-50 p-3 rounded-lg border-2 border-teal-200">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-10 h-10 text-teal-600" />
                         <div>
                           <p className="text-sm font-medium text-teal-900">Transfer Bank</p>
                           <p className="text-xs text-teal-700 mt-1">
-                            Konfirmasi pembayaran transfer melalui bank
+                            Konfirmasi transfer
                           </p>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-teal-200">
-                        <p className="text-xs text-teal-600">Total Pembayaran:</p>
-                        <p className="text-xl font-bold text-teal-800">
+                      <div className="mt-2 pt-2 border-t border-teal-200">
+                        <p className="text-xs text-teal-600">Total:</p>
+                        <p className="text-lg font-bold text-teal-800">
                           Rp {getCartTotal().toLocaleString('id-ID')}
                         </p>
                       </div>
@@ -1359,19 +1381,19 @@ Laporan ini dicetak pada: ${date}
                   )}
 
                   {selectedPaymentMethod === 'qris' && (
-                    <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-                      <div className="flex items-center gap-3">
-                        <QrCode className="w-12 h-12 text-blue-600" />
+                    <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+                      <div className="flex items-center gap-2">
+                        <QrCode className="w-10 h-10 text-blue-600" />
                         <div>
                           <p className="text-sm font-medium text-blue-900">Scan QRIS</p>
                           <p className="text-xs text-blue-700 mt-1">
-                            Pindai kode QR menggunakan aplikasi e-wallet atau mobile banking Anda
+                            Scan kode QR
                           </p>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-blue-200">
-                        <p className="text-xs text-blue-600">Total Pembayaran:</p>
-                        <p className="text-xl font-bold text-blue-800">
+                      <div className="mt-2 pt-2 border-t border-blue-200">
+                        <p className="text-xs text-blue-600">Total:</p>
+                        <p className="text-lg font-bold text-blue-800">
                           Rp {getCartTotal().toLocaleString('id-ID')}
                         </p>
                       </div>
@@ -1379,19 +1401,19 @@ Laporan ini dicetak pada: ${date}
                   )}
 
                   {selectedPaymentMethod === 'ewallet' && (
-                    <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
-                      <div className="flex items-center gap-3">
-                        <Smartphone className="w-12 h-12 text-purple-600" />
+                    <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="w-10 h-10 text-purple-600" />
                         <div>
                           <p className="text-sm font-medium text-purple-900">E-Wallet</p>
                           <p className="text-xs text-purple-700 mt-1">
-                            Pilih aplikasi e-wallet yang digunakan pelanggan
+                            Pilih aplikasi e-wallet
                           </p>
                         </div>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-purple-200">
-                        <p className="text-xs text-purple-600">Total Pembayaran:</p>
-                        <p className="text-xl font-bold text-purple-800">
+                      <div className="mt-2 pt-2 border-t border-purple-200">
+                        <p className="text-xs text-purple-600">Total:</p>
+                        <p className="text-lg font-bold text-purple-800">
                           Rp {getCartTotal().toLocaleString('id-ID')}
                         </p>
                       </div>
