@@ -174,3 +174,20 @@ model ShopProfile {
   updatedAt     DateTime    @updatedAt
   createdAt     DateTime    @default(now())
 }
+
+model POSTransaction {
+  id          String               @id @default(cuid())
+  total       Int
+  items       POSTransactionItem[]
+  createdAt   DateTime             @default(now())
+}
+
+model POSTransactionItem {
+  id              String           @id @default(cuid())
+  transactionId   String
+  name            String
+  price           Int
+  quantity        Int
+  subtotal        Int
+  transaction     POSTransaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+}

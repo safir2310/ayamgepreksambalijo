@@ -31,7 +31,8 @@ import {
   FileText,
   TrendingUp,
   Wallet,
-  Receipt
+  Receipt,
+  CheckCircle
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -172,6 +173,8 @@ export default function KasirPage() {
 
   // Shift state
   const [currentShiftId, setCurrentShiftId] = useState<string | null>(null)
+  const [shiftStartTime, setShiftStartTime] = useState<Date | null>(null)
+  const [shiftStatus, setShiftStatus] = useState<string>('active')
 
   // Clock state
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -262,6 +265,12 @@ export default function KasirPage() {
       const data = await res.json()
       if (data.success && data.shift) {
         setCurrentShiftId(data.shift.id)
+        setShiftStartTime(new Date(data.shift.startTime))
+        setShiftStatus(data.shift.status)
+        
+        if (data.shift.status === 'active') {
+          toast.success(`Shift dibuka: ${data.shift.id.slice(-6).toUpperCase()}`)
+        }
       }
     } catch (error) {
       console.error('Error creating/getting shift:', error)
@@ -663,9 +672,19 @@ Laporan ini dicetak pada: ${date}
       const data = await res.json()
 
       if (res.ok) {
-        toast.success('Shift berhasil ditutup')
+        setShiftStatus('closed')
+        toast.success('Shift berhasil ditutup! Data tersimpan.', {
+          description: 'Shift ditutup: ' + currentShiftId.slice(-6).toUpperCase(),
+          duration: 3000
+        })
+        
+        // Print report first
         printClosingReport()
-        handleLogout()
+        
+        // Small delay before logout to allow user to see success message
+        setTimeout(() => {
+          handleLogout()
+        }, 1500)
       } else {
         toast.error(data.error || 'Gagal menutup shift')
       }
@@ -785,10 +804,25 @@ Laporan ini dicetak pada: ${date}
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">Kasir</h1>
-                <p className="text-sm text-gray-500 flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  {user.username}
-                </p>
+                <div className="flex items-center gap-3 text-sm">
+                  <p className="text-gray-500 flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    {user.username}
+                  </p>
+                  {currentShiftId && (
+                    <p className={`flex items-center gap-1 ${shiftStatus === 'active' ? 'text-green-600' : 'text-gray-500'}`}>
+                      <Clock className="w-3 h-3" />
+                      <span className="font-medium">
+                        Shift: {currentShiftId.slice(-6).toUpperCase()}
+                      </span>
+                      {shiftStatus === 'active' && (
+                        <Badge variant="outline" className="ml-1 text-xs bg-green-50 border-green-300 text-green-700">
+                          Aktif
+                        </Badge>
+                      )}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -817,6 +851,7 @@ Laporan ini dicetak pada: ${date}
                 size="sm"
                 onClick={handleOpenClosingModal}
                 className="border-orange-200 hover:border-orange-400 hover:bg-orange-50"
+                disabled={!currentShiftId || shiftStatus !== 'active'}
               >
                 <Receipt className="w-4 h-4 mr-2" />
                 Tutup Kasir
@@ -950,35 +985,55 @@ Laporan ini dicetak pada: ${date}
         </div>
 
         {/* Right Column - Cart/Checkout (Fixed) */}
-        <div className="w-[420px] flex flex-col gap-4 shrink-0">
+        <div className="w-[500px] flex flex-col gap-4 shrink-0">
           <motion.div
             initial={{ x: 300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="sticky top-0"
           >
-            <Card className="border-orange-100 shadow-lg flex flex-col max-h-[calc(100vh-280px)]">
-              <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white flex-shrink-0 py-4">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ShoppingCart className="w-5 h-5" />
+            <Card className="border-orange-100 shadow-lg flex flex-col max-h-[calc(100vh-220px)]">
+              <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white flex-shrink-0 py-5">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <ShoppingCart className="w-6 h-6" />
                   Keranjang
                   {cart.length > 0 && (
-                    <Badge variant="secondary" className="ml-auto text-sm">
+                    <Badge variant="secondary" className="ml-auto text-base">
                       {cart.length}
                     </Badge>
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+              <CardContent className="p-5 flex-1 flex flex-col overflow-hidden">
+                {/* Shift Info Banner */}
+                {currentShiftId && shiftStatus === 'active' && (
+                  <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="font-medium">Shift Aktif</span>
+                      </div>
+                      <span className="text-green-600 font-mono text-xs">
+                        #{currentShiftId.slice(-6).toUpperCase()}
+                      </span>
+                    </div>
+                    {shiftStartTime && (
+                      <p className="text-xs text-green-600 mt-1">
+                        Dibuka: {shiftStartTime.toLocaleTimeString('id-ID')}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
                 <div className="flex-1 overflow-y-auto pr-2">
                   {cart.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400 min-h-[300px]">
-                      <ShoppingBag className="w-16 h-16 mb-3" />
-                      <p className="text-sm">Keranjang kosong</p>
-                      <p className="text-xs text-gray-500 mt-1">Tambahkan produk untuk memulai pesanan</p>
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 min-h-[350px]">
+                      <ShoppingBag className="w-20 h-20 mb-4" />
+                      <p className="text-base">Keranjang kosong</p>
+                      <p className="text-sm text-gray-500 mt-2">Tambahkan produk untuk memulai pesanan</p>
                     </div>
                   ) : (
-                    <div className="space-y-3 pb-3">
+                    <div className="space-y-4 pb-4">
                       {cart.map((item) => (
                         <motion.div
                           key={item.product.id}
@@ -986,45 +1041,45 @@ Laporan ini dicetak pada: ${date}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="flex gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200"
+                          className="flex gap-4 p-4 bg-orange-50 rounded-lg border border-orange-200"
                         >
                           {item.product.image && (
                             <img
                               src={item.product.image}
                               alt={item.product.name}
-                              className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                              className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-gray-800 line-clamp-1">{item.product.name}</h4>
-                            <p className="text-sm text-orange-600 font-bold mt-1">
+                            <h4 className="font-semibold text-base text-gray-800 line-clamp-1">{item.product.name}</h4>
+                            <p className="text-base text-orange-600 font-bold mt-2">
                               Rp {item.subtotal.toLocaleString('id-ID')}
                             </p>
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-3">
                               <Button
-                                size="sm"
+                                size="default"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-orange-200"
+                                className="h-10 w-10 p-0 border-orange-200"
                                 onClick={() => updateQuantity(item.product.id, -1)}
                               >
-                                <Minus className="w-4 h-4" />
+                                <Minus className="w-5 h-5" />
                               </Button>
-                              <span className="text-sm font-medium w-10 text-center">{item.quantity}</span>
+                              <span className="text-base font-bold w-12 text-center">{item.quantity}</span>
                               <Button
-                                size="sm"
+                                size="default"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-orange-200"
+                                className="h-10 w-10 p-0 border-orange-200"
                                 onClick={() => updateQuantity(item.product.id, 1)}
                               >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-5 h-5" />
                               </Button>
                               <Button
-                                size="sm"
+                                size="default"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+                                className="h-10 w-10 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
                                 onClick={() => removeFromCart(item.product.id)}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-5 h-5" />
                               </Button>
                             </div>
                           </div>
@@ -1036,30 +1091,30 @@ Laporan ini dicetak pada: ${date}
 
                 <Separator className="my-4 flex-shrink-0" />
 
-                <div className="space-y-2 flex-shrink-0">
-                  <div className="flex justify-between items-center text-sm">
+                <div className="space-y-3 flex-shrink-0">
+                  <div className="flex justify-between items-center text-base">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-medium">Rp {getCartTotal().toLocaleString('id-ID')}</span>
                   </div>
-                  <div className="flex justify-between items-center text-lg font-bold">
+                  <div className="flex justify-between items-center text-xl font-bold">
                     <span className="text-gray-800">Total</span>
                     <span className="text-orange-600">Rp {getCartTotal().toLocaleString('id-ID')}</span>
                   </div>
                 </div>
 
                 <Button
-                  className="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-base py-4 flex-shrink-0"
+                  className="w-full mt-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg py-5 flex-shrink-0"
                   disabled={cart.length === 0 || processingOrder}
                   onClick={() => setShowPaymentModal(true)}
                 >
                   {processingOrder ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Memproses...
                     </>
                   ) : (
                     <>
-                      <CreditCard className="w-5 h-5 mr-2" />
+                      <CreditCard className="w-6 h-6 mr-2" />
                       Bayar
                     </>
                   )}
@@ -1375,6 +1430,11 @@ Laporan ini dicetak pada: ${date}
                     <span className="flex items-center gap-2">
                       <FileText className="w-5 h-5" />
                       Tutup Kasir
+                      {currentShiftId && (
+                        <Badge variant="secondary" className="ml-2">
+                          #{currentShiftId.slice(-6).toUpperCase()}
+                        </Badge>
+                      )}
                     </span>
                     <Button
                       variant="ghost"
@@ -1461,12 +1521,24 @@ Laporan ini dicetak pada: ${date}
                         </div>
                       </div>
 
+                      {/* Warning Message */}
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <p className="text-sm text-amber-800 flex items-start gap-2">
+                          <span className="text-amber-600 mt-0.5">⚠️</span>
+                          <span>
+                            <strong>Perhatian:</strong> Setelah kasir ditutup, Anda akan logout otomatis. 
+                            Login kembali akan membuka <strong>shift baru</strong> dengan data yang terpisah dari shift ini.
+                          </span>
+                        </p>
+                      </div>
+
                       {/* Action Buttons */}
                       <div className="flex gap-3">
                         <Button
                           variant="outline"
                           className="flex-1 border-orange-200 hover:border-orange-400 hover:bg-orange-50"
                           onClick={printClosingReport}
+                          disabled={processingOrder}
                         >
                           <Printer className="w-4 h-4 mr-2" />
                           Cetak Laporan
@@ -1484,7 +1556,7 @@ Laporan ini dicetak pada: ${date}
                           ) : (
                             <>
                               <CheckCircle className="w-4 h-4 mr-2" />
-                              Tutup Kasir
+                              Tutup Kasir & Logout
                             </>
                           )}
                         </Button>
