@@ -935,7 +935,7 @@ Laporan ini dicetak pada: ${date}
       </section>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-6 flex gap-6">
+      <main className="flex-1 container mx-auto px-4 py-6 flex gap-6 min-h-[calc(100vh-420px)]">
         {/* Product Grid */}
         <div className="flex-1 flex flex-col gap-4">
           {/* Search and Filter */}
@@ -1051,10 +1051,10 @@ Laporan ini dicetak pada: ${date}
           initial={{ x: 300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="w-96 flex flex-col gap-4"
+          className="w-[480px] flex flex-col gap-4 min-h-[calc(100vh-420px)]"
         >
-          <Card className="border-orange-100 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <Card className="border-orange-100 shadow-lg h-full flex flex-col">
+            <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white flex-shrink-0">
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 Keranjang
@@ -1065,9 +1065,9 @@ Laporan ini dicetak pada: ${date}
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
               {/* Order Type Badge */}
-              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   {orderType === 'dine-in' && <UtensilsCrossed className="w-5 h-5 text-orange-600" />}
                   {orderType === 'take-away' && <PackageOpen className="w-5 h-5 text-orange-600" />}
@@ -1083,14 +1083,14 @@ Laporan ini dicetak pada: ${date}
                 </div>
               </div>
 
-              <ScrollArea className="h-80 pr-4">
+              <div className="flex-1 overflow-y-auto pr-2">
                 {cart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 min-h-[400px]">
                     <ShoppingBag className="w-12 h-12 mb-2" />
                     <p className="text-sm">Keranjang kosong</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 pb-4">
                     {cart.map((item) => (
                       <motion.div
                         key={item.product.id}
@@ -1098,45 +1098,45 @@ Laporan ini dicetak pada: ${date}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="flex gap-2 p-2 bg-orange-50 rounded-lg"
+                        className="flex gap-3 p-3 bg-orange-50 rounded-lg"
                       >
                         {item.product.image && (
                           <img
                             src={item.product.image}
                             alt={item.product.name}
-                            className="w-16 h-16 object-cover rounded-md"
+                            className="w-20 h-20 object-cover rounded-md flex-shrink-0"
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm text-gray-800 line-clamp-1">{item.product.name}</h4>
-                          <p className="text-xs text-orange-600 font-bold">
+                          <h4 className="font-semibold text-base text-gray-800 line-clamp-1">{item.product.name}</h4>
+                          <p className="text-sm text-orange-600 font-bold mt-1">
                             Rp {item.subtotal.toLocaleString('id-ID')}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 w-6 p-0 border-orange-200"
+                              className="h-8 w-8 p-0 border-orange-200"
                               onClick={() => updateQuantity(item.product.id, -1)}
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-4 h-4" />
                             </Button>
-                            <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                            <span className="text-base font-medium w-10 text-center">{item.quantity}</span>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 w-6 p-0 border-orange-200"
+                              className="h-8 w-8 p-0 border-orange-200"
                               onClick={() => updateQuantity(item.product.id, 1)}
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto"
                               onClick={() => removeFromCart(item.product.id)}
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -1144,11 +1144,11 @@ Laporan ini dicetak pada: ${date}
                     ))}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
 
-              <Separator className="my-4" />
+              <Separator className="my-4 flex-shrink-0" />
 
-              <div className="space-y-2">
+              <div className="space-y-2 flex-shrink-0">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">Rp {getCartTotal().toLocaleString('id-ID')}</span>
@@ -1160,7 +1160,7 @@ Laporan ini dicetak pada: ${date}
               </div>
 
               <Button
-                className="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                className="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-base py-6 flex-shrink-0"
                 disabled={cart.length === 0 || processingOrder}
                 onClick={() => setShowPaymentModal(true)}
               >
@@ -1171,7 +1171,7 @@ Laporan ini dicetak pada: ${date}
                   </>
                 ) : (
                   <>
-                    <CreditCard className="w-4 h-4 mr-2" />
+                    <CreditCard className="w-5 h-5 mr-2" />
                     Bayar
                   </>
                 )}
